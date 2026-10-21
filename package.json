@@ -1,0 +1,10 @@
+{
+  "name": "polyrhythmic",
+  "private": true,
+  "type": "module",
+  "description": "Dev only: tests for the shared modules. Nothing here ships to the browser.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 dev-server.py 8000"
+  }
+}

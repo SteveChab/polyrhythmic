@@ -1,0 +1,51 @@
+{
+  "format": "polytoggle",
+  "version": 1,
+  "name": "Fixture v1",
+  "bpm": 113.13,
+  "masterDb": -6,
+  "lanes": [
+    { "id": "k7f2", "instrument": "kick", "name": "Kick" },
+    { "id": "b9x1", "instrument": "saw-bass", "name": "Low saw" }
+  ],
+  "scenes": [
+    {
+      "polytoggle": "polymeter",
+      "lanes": {
+        "k7f2": {
+          "beats": 4, "volumeDb": 0, "pan": 0, "solo": false, "mute": false,
+          "tuning": "12-edo",
+          "envelope": { "attackMs": 2, "decayMs": 180, "sustainPct": 0, "releaseMs": 60 },
+          "notes": [
+            { "beat": 0, "length": 1, "cents": -3300, "noisePct": 10, "volumeDb": 0 },
+            { "beat": 2, "length": 1, "cents": -3300, "noisePct": 10, "volumeDb": -6 }
+          ]
+        },
+        "b9x1": {
+          "beats": 3, "volumeDb": -3, "pan": 0, "solo": false, "mute": false,
+          "tuning": "19-edo",
+          "envelope": { "attackMs": 5, "decayMs": 250, "sustainPct": 60, "releaseMs": 120 },
+          "notes": [
+            { "beat": 0, "length": 2, "cents": -2905.263157894737, "noisePct": 0, "volumeDb": -3 }
+          ]
+        }
+      }
+    },
+    { "polytoggle": "polyrhythm", "lanes": {
+      "k7f2": { "beats": 4, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 2, "decayMs": 180, "sustainPct": 0, "releaseMs": 60 }, "notes": [] },
+      "b9x1": { "beats": 3, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 5, "decayMs": 250, "sustainPct": 60, "releaseMs": 120 }, "notes": [] }
+    } },
+    { "polytoggle": "polymeter", "lanes": {
+      "k7f2": { "beats": 4, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 2, "decayMs": 180, "sustainPct": 0, "releaseMs": 60 }, "notes": [] },
+      "b9x1": { "beats": 3, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 5, "decayMs": 250, "sustainPct": 60, "releaseMs": 120 }, "notes": [] }
+    } },
+    { "polytoggle": "polymeter", "lanes": {
+      "k7f2": { "beats": 4, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 2, "decayMs": 180, "sustainPct": 0, "releaseMs": 60 }, "notes": [] },
+      "b9x1": { "beats": 3, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 5, "decayMs": 250, "sustainPct": 60, "releaseMs": 120 }, "notes": [] }
+    } },
+    { "polytoggle": "polymeter", "lanes": {
+      "k7f2": { "beats": 4, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 2, "decayMs": 180, "sustainPct": 0, "releaseMs": 60 }, "notes": [] },
+      "b9x1": { "beats": 3, "volumeDb": 0, "pan": 0, "solo": false, "mute": false, "tuning": "12-edo", "envelope": { "attackMs": 5, "decayMs": 250, "sustainPct": 60, "releaseMs": 120 }, "notes": [] }
+    } }
+  ]
+}

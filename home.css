@@ -1,0 +1,58 @@
+/* Home page. Shared pieces come from tokens.css, components.css and site.css. */
+
+/* Video placeholder */
+.video { max-width: 52rem; aspect-ratio: 16 / 9; border: var(--stroke-rule) solid var(--ink); margin-top: var(--space-16); background: var(--panel); }
+.video iframe { width: 100%; height: 100%; border: 0; display: block; }
+.video__poster {
+  width: 100%; height: 100%; padding: 0; border: 0; background: var(--panel); cursor: pointer; position: relative;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-24); color: var(--ink);
+}
+.video__poster:disabled { cursor: default; }
+.video__rows { display: grid; gap: var(--space-4); width: min(44%, 22rem); }
+.video__rows .ratio-row { display: grid; grid-template-columns: repeat(var(--count), 1fr); gap: var(--space-4); }
+.video__rows .ratio-cell { height: 28px; border: var(--stroke-hair) solid var(--ink); display: block; }
+.video__button {
+  width: 72px; height: 72px; border: var(--stroke-rule) solid var(--ink); background: var(--ink); color: var(--paper);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.video__button .pr-icon { font-size: 40px; }
+.video__poster:disabled .video__button { background: var(--paper); color: var(--off); border-color: var(--off); }
+.video__note { margin: var(--space-10) 0 0; font: 400 12px/1.5 var(--font-mono); color: var(--muted); }
+
+/* App cards */
+.card-visual { height: 150px; border: var(--stroke-hair) solid var(--ink); padding: var(--space-12); background: var(--paper); display: flex; flex-direction: column; justify-content: center; gap: var(--space-6); }
+.mini-row { display: grid; grid-template-columns: repeat(var(--count), 28px); gap: var(--space-4); }
+.mini-row i { height: 28px; border: var(--stroke-hair) solid var(--ink); display: block; }
+.card-visual--color { align-items: center; }
+.card-wheel {
+  position: relative; width: 120px; height: 120px; border-radius: var(--radius-round); border: var(--stroke-hair) solid var(--ink);
+  background: radial-gradient(closest-side, #fff, rgba(255,255,255,0)),
+    conic-gradient(#ff0000 0deg, #ffff00 60deg, #00ff00 120deg, #00ffff 180deg, #0000ff 240deg, #ff00ff 300deg, #ff0000 360deg);
+}
+.card-wheel i {
+  position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: var(--radius-round);
+  background: var(--swatch); border: var(--stroke-rule) solid var(--paper); box-shadow: 0 0 0 var(--stroke-rule) var(--ink);
+}
+.band-row { display: flex; align-items: center; gap: var(--space-8); height: 32px; }
+.band-row__clicks { flex: 0 0 auto; display: grid; grid-template-columns: repeat(var(--count), 8px); gap: var(--space-4); width: 70px; }
+.band-row__clicks i { height: 22px; border: var(--stroke-hair) solid var(--ink); display: block; }
+.band-row__tone { flex: 1; height: 100%; border: var(--stroke-hair) solid var(--ink); display: block; }
+.site-card__link .pr-icon { font-size: 16px; }
+
+/* The ladder */
+.ladder { list-style: none; margin: var(--space-20) 0 0; padding: 0; max-width: 40rem; display: flex; flex-direction: column; }
+.ladder__step { border: var(--stroke-rule) solid var(--ink); padding: var(--space-14) var(--space-16); display: flex; flex-direction: column; gap: var(--space-4); position: relative; }
+.ladder__value { font: 700 22px/1.2 var(--font-sans); }
+.ladder__note { color: var(--muted); font: 400 13px/1.4 var(--font-sans); }
+.ladder__swatch { position: absolute; right: var(--space-16); top: var(--space-14); bottom: var(--space-14); width: 72px; border: var(--stroke-hair) solid var(--ink); }
+.ladder__between { display: flex; align-items: center; gap: var(--space-8); padding: var(--space-8) var(--space-16); font: 500 13px/1 var(--font-mono); }
+.ladder__caption { margin: var(--space-14) 0 0; max-width: 40rem; }
+
+/* Article and About */
+.article-teaser { max-width: 36rem; margin: var(--space-8) 0 var(--space-14); font: 400 16px/1.5 var(--font-sans); }
+.about__bio { max-width: 40rem; margin: var(--space-8) 0 var(--space-12); }
+.about__links { display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-20); margin: 0; }
+.about__links a { display: inline-block; font: 500 14px/1.4 var(--font-sans); padding: var(--space-6) 0; }
+.about__links .pr-icon { font-size: 16px; }
+.site-card .site-card__go { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-10); flex: none; margin: 0; }
+.site-card__note { font: 400 12px/1 var(--font-mono); color: var(--muted); }

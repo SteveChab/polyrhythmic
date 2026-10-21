@@ -1,0 +1,95 @@
+/* polyrhythmic.design tokens: exported from the design system (tokens.json). */
+/* The design system is the source. Re-export instead of editing by hand. */
+
+:root {
+  /* Color */
+  --paper: #ffffff;
+  --ink: #000000;
+  --ink-soft: #222222;
+  --muted: #444444;
+  --muted-inverse: #cccccc;
+  --subtle: #555555;
+  --off: #767676;
+  --panel: #f0f0f0;
+  --divider: #d0d0d0;
+  --ghost-line: #b8b8b8;
+  --ghost-ink: #9a9a9a;
+  --poly-outline: #111111;
+  --poly-crust: #9a9a9a;
+  --poly-g: #e60058;
+  --poly-c: #36e600;
+  --poly-e: #7700e6;
+  --note-g: #ff0062;
+  --note-gs: #ff0000;
+  --note-a: #ff7700;
+  --note-as: #ffee00;
+  --note-b: #aaff00;
+  --note-c: #3cff00;
+  --note-cs: #00ffee;
+  --note-d: #0090ff;
+  --note-ds: #1100ff;
+  --note-e: #8400ff;
+  --note-f: #dd00ff;
+  --note-fs: #ff00c3;
+  /* Type families */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --font-icons: "Material Symbols Outlined";
+  /* Spacing */
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-36: 36px;
+  --space-48: 48px;
+  /* Size */
+  --size-target: 44px;
+  --size-control: 36px;
+  --size-field: 28px;
+  --size-dense: 26px;
+  --size-hit-min: 24px;
+  --size-cell: 64px;
+  --size-playhead: 4px;
+  --size-column: 236px;
+  --size-rail: 56px;
+  --size-menu: 260px;
+  /* Stroke */
+  --stroke-hair: 1px;
+  --stroke-rule: 2px;
+  --stroke-focus: 3px;
+  /* Radius */
+  --radius-none: 0px;
+  --radius-switch: 15px;
+  --radius-round: 50%;
+  /* Shadow */
+  --focus-halo: 0 0 0 2px #ffffff;
+}
+
+/* Type styles, one class per style: .t-<name> */
+.t-wordmark { font: 700 17px/1 var(--font-mono); }
+.t-display { font: 700 28px/1.2 var(--font-sans); }
+.t-heading { font: 700 18px/1.2 var(--font-sans); }
+.t-title { font: 700 15px/1.2 var(--font-sans); }
+.t-body { font: 400 14px/1.5 var(--font-sans); }
+.t-lane-name { font: 700 13px/1.2 var(--font-sans); }
+.t-control { font: 500 13px/1 var(--font-sans); }
+.t-switch-label { font: 600 13px/1 var(--font-sans); }
+.t-small-link { font: 500 12px/1 var(--font-sans); }
+.t-inline-label { font: 600 12px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; }
+.t-help { font: 400 12px/1.5 var(--font-sans); }
+.t-field-label { font: 600 11px/1.2 var(--font-sans); }
+.t-readout-lg { font: 600 20px/1 var(--font-mono); }
+.t-bpm { font: 500 16px/1 var(--font-mono); }
+.t-readout-strong { font: 600 14px/1.3 var(--font-mono); }
+.t-value { font: 500 13px/1 var(--font-mono); }
+.t-readout { font: 400 12px/1.3 var(--font-mono); }
+.t-eyebrow { font: 600 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.t-note-label { font: 600 11px/1 var(--font-mono); }
+.t-beat-number { font: 500 11px/1 var(--font-mono); }
+.t-meta { font: 400 11px/1.2 var(--font-mono); }
+.t-lane-kind { font: 400 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
