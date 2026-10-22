@@ -27,6 +27,7 @@ const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text
  *   renameSong(), newSong(), openEntries(close), save(), exportSong(), exportWav(),
  *   duplicateScene(), clearScene(), canDuplicateScene(),
  *   zoom: { min, max, get(), set(v) }, master: { get(), set(pos), text() },
+ *   fullscreen: { supported(), active(), toggle() }, install: { available(), run() },
  * }
  */
 export function setupPhone(api) {
@@ -84,6 +85,13 @@ export function setupPhone(api) {
   masterRange.addEventListener('input', () => api.master.set(Number(masterRange.value)));
   masterRange.addEventListener('change', () => api.master.done());
 
+  // Full screen hides the browser's bars where the browser allows it (Android); iPhone Safari can't, so
+  // there the item is left out and Add to Home Screen is the way to a full screen.
+  const fsItem = api.fullscreen.supported()
+    ? menuItem({ icon: 'fullscreen', label: 'Full screen', hint: 'off', attrs: { 'aria-pressed': 'false' }, onClick: () => { api.fullscreen.toggle(); frame.close(); } })
+    : null;
+  const installItem = menuItem({ icon: 'add_to_home_screen', label: 'Add to Home Screen', hint: 'full screen', onClick: () => { frame.close(); api.install.run(); } });
+
   const helpDialog = buildHelp();
   menu.body.append(
     menuGroup('Song'),
@@ -101,6 +109,7 @@ export function setupPhone(api) {
       zoomRange,
       h('button', { class: 'pt-mrow__step', type: 'button', 'aria-label': 'Zoom in', text: '+', onclick: () => { api.zoom.set(api.zoom.get() + 8); render(); } })),
     h('div', { class: 'pt-mrow pt-mrow--master' }, h('span', { class: 'pt-mrow__label', text: 'Master volume', 'aria-hidden': 'true' }), masterRange, masterOut),
+    ...[fsItem, installItem].filter(Boolean),
     menuItem({ icon: 'help', label: 'How polytoggle works', onClick: () => { frame.close(); helpDialog.showModal(); helpDialog.querySelector('button').focus(); }, attrs: { class: 'pr-mi pt-mi--help' } }),
     menuFooter('polytoggle'),
   );
@@ -135,6 +144,13 @@ export function setupPhone(api) {
     if (document.activeElement !== zoomRange) zoomRange.value = String(api.zoom.get());
     if (document.activeElement !== masterRange) masterRange.value = String(api.master.get());
     masterOut.textContent = api.master.text();
+    installItem.hidden = !api.install.available();
+    if (fsItem) {
+      const on = api.fullscreen.active();
+      fsItem.setAttribute('aria-pressed', String(on));
+      fsItem.querySelector('.pr-mi__hint').textContent = on ? 'on' : 'off';
+      fsItem.querySelector('.pr-icon').textContent = on ? 'fullscreen_exit' : 'fullscreen';
+    }
     masterRange.setAttribute('aria-valuetext', api.master.text());
   }
 

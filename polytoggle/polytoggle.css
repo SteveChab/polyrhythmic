@@ -253,11 +253,12 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .is-phone .pr-note[aria-selected="true"] .pr-note__grab::after { content: ""; width: 2px; height: 12px; background: var(--ink); }
 .is-phone .pr-note__grab::before { content: ""; position: absolute; inset: -8px -15px; }
 
-/* The settings drawer: 292px beside the stage, Note and Lane tabs, cells two to a row. */
+/* The settings panel (Oct 22): 320px beside the stage, from the top bar to the bottom edge. It never scrolls:
+   the cells' rows share whatever height is left, from about 240px (Safari's bars showing) up. */
 .is-phone .pt-dock { display: flex; min-height: 0; }
 .is-phone .pt-panelbar, .is-phone .pt-collapse { display: none; }
 .is-phone .pt-panel {
-  display: flex; flex-direction: column; width: 292px; height: auto; min-height: 0; overflow: hidden auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; width: 320px; height: auto; min-height: 0; overflow: hidden;
   border-top: 0; border-left: var(--stroke-rule) solid var(--ink); background: var(--paper);
 }
 .is-phone .pt-panel[data-tab="note"] .pt-sec--lane, .is-phone .pt-panel[data-tab="lane"] .pt-sec--note { display: none; }
@@ -273,15 +274,15 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .pt-tabs__close { display: flex; align-items: center; justify-content: center; width: var(--size-target); height: var(--size-target); padding: 0; border: 0; border-left: var(--stroke-rule) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; }
 .pt-tabs__close .pr-icon { font-size: 22px; }
 :is(.pt-tab, .pt-tabs__close, .pt-ctl, .pt-renamebtn):focus-visible { outline-offset: -3px; }
-.is-phone .pt-sec { flex: none; gap: 0; padding: 0; background: var(--paper); border-right: 0; }
-.is-phone .pt-sec__head { flex-wrap: wrap; height: auto; min-height: var(--size-target); gap: 2px var(--space-8); padding: var(--space-6) 0 var(--space-6) var(--space-12); }
+.is-phone .pt-sec { flex: 1 1 auto; min-height: 0; gap: 0; padding: 0; background: var(--paper); border-right: 0; }
+.is-phone .pt-sec__head { flex: none; flex-wrap: wrap; height: auto; min-height: var(--size-target); gap: 2px var(--space-8); padding: var(--space-4) 0 var(--space-4) var(--space-12); }
 .is-phone .pt-sec__head .pr-eyebrow { display: none; }
 .is-phone .pt-sec__head .pr-swatch { width: 16px; height: 16px; }
 .is-phone .pt-sec__title { flex: 1 1 0; font-size: 14px; }
 .is-phone .pt-sec--note .pt-sec__head { padding-right: var(--space-12); }
 .is-phone .pt-readout { order: 3; flex-basis: 100%; margin-left: 0; padding-bottom: var(--space-4); overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
 .pt-renamebtn { display: flex; align-items: center; justify-content: center; flex: none; width: var(--size-target); height: var(--size-target); padding: 0; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
-.pt-lanectl { display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-8) var(--space-10); }
+.pt-lanectl { display: flex; flex: none; align-items: center; gap: var(--space-4); padding: 0 var(--space-8) var(--space-6); }
 .pt-ctl {
   display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--size-target); height: var(--size-target); padding: 0;
   border: var(--stroke-hair) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; font: 600 14px/1 var(--font-mono);
@@ -291,17 +292,24 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .pt-lanectl__gap { flex: 1; }
 .pt-lanectl__count { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 28px; font: 600 16px/1 var(--font-mono); }
 .pt-lanectl__unit { font: 500 8px/1 var(--font-mono); text-transform: uppercase; }
-.is-phone .pt-cells6 { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-left: 0; border-top: var(--stroke-hair) solid var(--ink); }
-.is-phone .pt-param { margin-left: 0; border: 0; border-bottom: var(--stroke-hair) solid var(--ink); padding: 7px 10px 9px; touch-action: pan-y; cursor: text; }
-.is-phone .pt-sec--lane .pt-param { background: var(--panel); }
-.is-phone .pt-sec--note .pt-param:nth-child(odd),
-.is-phone .pt-sec--lane .pt-param:is(:nth-child(1), :nth-child(4), :nth-child(6), :nth-child(8)) { border-right: var(--stroke-hair) solid var(--ink); }
+/* The cells: three to a row for a note, four for a lane, in two rows that stretch to fill. Hairlines are the grid's gaps. */
+.is-phone .pt-cells6 {
+  flex: 1 1 auto; min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(40px, 1fr));
+  gap: var(--stroke-hair); padding-left: 0; background: var(--ink); border-block: var(--stroke-hair) solid var(--ink);
+}
+.is-phone .pt-sec--lane .pt-cells6 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.is-phone .pt-param { height: auto; min-height: 0; margin-left: 0; border: 0; padding: 6px 8px 8px; touch-action: none; cursor: ew-resize; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.is-phone .pt-param__input { cursor: ew-resize; pointer-events: none; -webkit-user-select: none; user-select: none; }
+.is-phone .pt-param__select { pointer-events: auto; cursor: pointer; }
+.is-phone .pt-param:has(.pt-param__select) { cursor: pointer; }
+.is-phone .pt-param.is-scrubbing { background: var(--ink); color: var(--paper); }
+.is-phone .pt-param.is-scrubbing :is(.pt-param__input, .pt-param__label, .pt-param__unit) { color: var(--paper); }
+.is-phone .pt-param.is-scrubbing .pt-param__bar { background: var(--paper); }
+.is-phone .pt-sec--lane .pt-param:not(.is-scrubbing) { background: var(--panel); }
 .is-phone .pt-param__input, .is-phone .pt-param__select { font-size: 16px; } /* 16px, or iOS zooms in on focus */
-.is-phone .pt-param--env { order: 1; grid-column: 1 / -1; height: 76px; padding: var(--space-10) var(--space-12); border-bottom: 0; background: var(--paper) !important; }
-.is-phone .pt-param--env .pt-env { height: 44px; border: var(--stroke-hair) solid var(--ink); box-sizing: border-box; }
-.is-phone .pt-sec__delete { align-self: flex-start; min-height: var(--size-target); margin: var(--space-4) var(--space-12) var(--space-12); font-size: 13px; }
-.is-phone .pt-sec__delete .pr-icon { font-size: 20px; }
-.pt-noteacts { display: flex; gap: var(--space-8); padding: var(--space-8) var(--space-12) var(--space-10); }
+.is-phone .pt-param--env { order: 1; cursor: default; background: var(--paper) !important; }
+.is-phone .pt-param--env .pt-env { flex: 1 1 auto; min-height: 0; height: auto; }
+.pt-noteacts { display: flex; flex: none; gap: var(--space-8); padding: var(--space-6) var(--space-12) var(--space-8); }
 .pt-noteacts .pr-btn { flex: 1 1 0; height: var(--size-target); justify-content: center; }
 
 /* The Add drawer: hear an instrument, or add it as a lane. */
@@ -346,3 +354,11 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .is-phone .pt-dialog { max-width: min(28rem, calc(100vw - 32px)); }
 .is-phone .pt-dialog__input { font-size: 16px; }
 .is-phone .pt-lanes:not(:has(.pt-lane)) { flex: none; }
+/* BPM drags sideways too (app.js, "Phones: drag a value sideways"). */
+.is-phone .pr-inline[data-info="bpm"] { touch-action: none; cursor: ew-resize; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.is-phone .pr-inline[data-info="bpm"] .pr-input--bpm { pointer-events: none; }
+.is-phone .pr-inline[data-info="bpm"].is-scrubbing { background: var(--ink); color: var(--paper); }
+.is-phone .pr-inline[data-info="bpm"].is-scrubbing .pr-input--bpm { color: var(--paper); }
+/* Tuning in a quarter-width cell: the menu arrow moves up beside the label so "12-EDO" fits. */
+.is-phone .pt-param__select { padding-right: 0; background-image: none; }
+.is-phone .pt-param:has(.pt-param__select) .pt-param__label::after { content: " \25BE"; }

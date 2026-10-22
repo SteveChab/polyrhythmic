@@ -18,6 +18,8 @@ import { getAudioContext, unlockAudio, heardTime, createFrameLoop, createSchedul
 import { bindPlayPause } from '../shared/ui.js';
 import { isPhone, onPhoneChange } from '../shared/phone.js';
 import { setupPhone } from './phone.js';
+import { canFullscreen, isFullscreen, enterFullscreen, exitFullscreen, onFullscreenChange } from '../shared/fullscreen.js';
+import { canInstall, install, isIOS, isStandalone, onInstallChange } from '../shared/install.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1539,7 +1541,7 @@ const SCRUB = {
 };
 let scrub = null;
 $('panel').addEventListener('pointerdown', (e) => {
-  if (e.button !== 0) return;
+  if (e.button !== 0 || isPhone()) return; // a phone drags sideways instead (below)
   const cell = e.target.closest('.pt-param');
   const input = cell?.querySelector('.pt-param__input');
   if (!input || !SCRUB[input.id] || input.tagName === 'SELECT') return;
@@ -1583,10 +1585,135 @@ addEventListener('pointerup', endScrub);
 addEventListener('pointercancel', endScrub);
 // A drag that moved must not also focus the box for typing.
 $('panel').addEventListener('click', (e) => {
+  if (isPhone()) return;
   const cell = e.target.closest('.pt-param');
   if (!cell || e.target.matches('input, select')) return;
   cell.querySelector('.pt-param__input')?.focus();
 });
+
+// ---- Phones: drag a value sideways, like a slider. The keyboard never opens. ----
+// Every number cell and BPM work the same way: nothing moves until the finger has travelled 10px,
+// then each step takes a fixed distance, wide enough that a wobble doesn't change anything. The
+// pointer is captured, so a drag can run across the whole screen, not just the cell. The envelope
+// times move along the same log scale as their bars. You hear the note as it changes, and one drag
+// is one undo step.
+
+const DRAG = {
+  'n-pitch': { pitch: true, px: 16 }, 'n-hz': { pitch: true, px: 16 }, // one step of the lane's tuning
+  'n-octave': { step: 1, px: 28 }, 'n-length': { step: 1, px: 20 },
+  'n-noise': { step: 1, px: 4 }, 'n-volume': { step: 1, px: 10 },
+  'env-attackMs': { log: true }, 'env-decayMs': { log: true }, 'env-releaseMs': { log: true },
+  'env-sustainPct': { step: 1, px: 4 },
+  'p-lane-vol': { step: 1, px: 10 }, 'p-lane-pan': { step: 5, px: 10 },
+  bpm: { step: 1, px: 6, silent: true },
+};
+const DRAG_DEAD_PX = 10;
+const LOG_SPAN_PX = 400; // the whole 0–5000 ms range of an envelope time
+
+const ENV_MAX = S.ENVELOPE_MAX_MS;
+const msFromPos = (p) => {
+  const ms = Math.exp(clamp01(p) * Math.log(ENV_MAX + 1)) - 1;
+  const unit = ms < 100 ? 1 : ms < 1000 ? 10 : 50;
+  return Math.max(0, Math.min(ENV_MAX, Math.round(ms / unit) * unit));
+};
+
+let drag2 = null;
+let lastHeard = 0;
+let hearTimer = 0;
+
+/** Hear what the drag just changed: the selected note, or the lane's own default note. */
+function hearSelection() {
+  clearTimeout(hearTimer);
+  const wait = 90 - (performance.now() - lastHeard);
+  if (wait > 0) { hearTimer = setTimeout(hearSelection, wait); return; }
+  lastHeard = performance.now();
+  if (sel.lane === null) return;
+  const lane = laneAt(laneIdx(sel.lane));
+  const ls = settings(sel.lane);
+  const inst = S.getInstrument(lane.instrument);
+  const note = currentNote() ?? { cents: inst.cents, noisePct: inst.noisePct, volumeDb: 0 };
+  ensureAudio().then(() => sound.audition(lane.instrument, { ...note, volumeDb: Math.max(S.DB_FILE_MIN, note.volumeDb + ls.volumeDb) }, ls.envelope));
+}
+
+function startDrag2(e, input, cell) {
+  e.preventDefault(); // no focus, so no keyboard and no text selection
+  try { cell.setPointerCapture(e.pointerId); } catch { /* the window's own listeners follow the drag anyway */ }
+  drag2 = { input, cell, spec: DRAG[input.id], x: e.clientX, pointer: e.pointerId, base: Number(input.value), steps: 0, moved: false,
+    p0: DRAG[input.id].log ? logPos(Number(input.value) + 1, 1, ENV_MAX + 1) : 0 };
+}
+
+function setDragged(input, v) {
+  if (String(v) === input.value) return false;
+  input.value = String(v);
+  if (input.id === 'bpm') { commit(S.setBpm(song, v), { key: 'bpm', stage: false }); return true; }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
+}
+
+addEventListener('pointerdown', (e) => {
+  if (!isPhone() || e.button !== 0 || drag2) return;
+  if (e.target.closest('select')) return; // Tuning opens its own picker
+  const bpm = e.target.closest('.pr-inline[data-info="bpm"]');
+  const cell = bpm ?? e.target.closest('#panel .pt-param');
+  const input = bpm ? $('bpm') : cell?.querySelector('.pt-param__input');
+  if (input && DRAG[input.id]) startDrag2(e, input, cell);
+}, true);
+
+addEventListener('pointermove', (e) => {
+  const d = drag2;
+  if (!d || e.pointerId !== d.pointer) return;
+  const dx = e.clientX - d.x;
+  if (!d.moved) {
+    if (Math.abs(dx) < DRAG_DEAD_PX) return;
+    d.moved = true;
+    scrubbing = true;
+    history.seal();
+    d.cell.classList.add('is-scrubbing');
+  }
+  const travel = dx - Math.sign(dx) * DRAG_DEAD_PX;
+  let changed = false;
+  if (d.spec.pitch) {
+    const steps = Math.trunc(travel / d.spec.px);
+    for (let i = d.steps; i !== steps; i += Math.sign(steps - i)) stepPitchBy(Math.sign(steps - i));
+    changed = steps !== d.steps;
+    d.steps = steps;
+  } else if (d.spec.log) {
+    changed = setDragged(d.input, msFromPos(d.p0 + travel / LOG_SPAN_PX));
+  } else {
+    const lo = d.input.min === '' ? -Infinity : Number(d.input.min);
+    const hi = d.input.max === '' ? Infinity : Number(d.input.max);
+    const raw = d.base + Math.trunc(travel / d.spec.px) * d.spec.step;
+    changed = setDragged(d.input, Math.max(lo, Math.min(hi, Math.round(raw * 10) / 10)));
+  }
+  if (changed && !d.spec.silent) hearSelection();
+});
+
+function endDrag2(e) {
+  const d = drag2;
+  if (!d || (e && e.pointerId !== d.pointer)) return;
+  drag2 = null;
+  d.cell.classList.remove('is-scrubbing');
+  if (d.moved) { scrubbing = false; history.seal(); renderTop(); renderPanel(); if (d.input.id === 'bpm') renderStage(); } // the loop readout shows the time
+}
+addEventListener('pointerup', endDrag2);
+addEventListener('pointercancel', endDrag2);
+// On a phone a tap on a cell (or BPM) must not focus its box either: that would bring up the keyboard.
+addEventListener('click', (e) => {
+  if (isPhone() && !e.target.closest('select') && e.target.closest('#panel .pt-param, .pr-inline[data-info="bpm"]')) e.preventDefault();
+}, true);
+
+/** Phones: the value boxes are read-only and never ask for a keyboard; a hardware keyboard's arrows still step them. */
+function applyPhoneInputs() {
+  for (const el of document.querySelectorAll('#panel input.pt-param__input, #bpm')) {
+    el.readOnly = isPhone();
+    if (isPhone()) el.inputMode = 'none';
+    else if (el.id === 'bpm') el.inputMode = 'decimal';
+    else el.removeAttribute('inputmode');
+  }
+}
+applyPhoneInputs();
+onPhoneChange(applyPhoneInputs);
 
 // Esc in a settings field goes back to the same cell on the stage.
 $('panel').addEventListener('keydown', (e) => {
@@ -1690,6 +1817,26 @@ phone = setupPhone({
   clearScene: () => clearSceneAt(scene),
   canDuplicateScene: () => !S.sceneIsEmpty(sc()) && S.nextEmptyScene(song, scene) >= 0,
   zoom: { min: ZOOM_MIN, max: ZOOM_MAX, get: () => zoom, set: setZoom },
+  fullscreen: {
+    supported: () => canFullscreen() && !isStandalone(),
+    active: isFullscreen,
+    // Called straight from the tap: entering full screen needs the tap's user gesture.
+    toggle() {
+      const on = !isFullscreen();
+      setPref(store.KEYS.fullscreen, on ? 'on' : 'off');
+      if (on) enterFullscreen(); else exitFullscreen();
+    },
+  },
+  install: {
+    available: canInstall,
+    run: () => install({
+      explain: () => ask({
+        title: 'Add polytoggle to your Home Screen',
+        text: `${isIOS() ? 'In Safari, tap the ⋯ button (or Share), then Add to Home Screen.' : 'Open your browser’s menu (⋮), then Add to Home screen or Install app.'} Open polytoggle from its new icon and it fills the screen, with no browser bars. Songs saved there are kept apart from the browser’s, so export a song file to move one across.`,
+        ok: 'Got it', cancel: null,
+      }),
+    }),
+  },
   master: {
     get: () => dbToPos(song.masterDb),
     set: (p) => commit(S.setMasterDb(song, posToDb(p)), { key: 'master', stage: false }),
@@ -1698,6 +1845,18 @@ phone = setupPhone({
   },
 });
 onPhoneChange(() => { eraseMode = false; renderTop(); renderStage(); renderPanel(); });
+
+// Phones held sideways: the first tap on the stage hides the browser's bars (Android; iPhone Safari can't).
+// Once per visit, and never once Full screen has been turned off in the Menu.
+function autoFullscreen(e) {
+  if (!isPhone() || !canFullscreen() || isFullscreen() || isStandalone() || pref(store.KEYS.fullscreen, 'on') === 'off') return;
+  if (!matchMedia('(orientation: landscape)').matches || !$('stage').contains(e.target)) return;
+  $('stage').removeEventListener('pointerup', autoFullscreen);
+  enterFullscreen();
+}
+$('stage').addEventListener('pointerup', autoFullscreen);
+onFullscreenChange(() => phone?.render());
+onInstallChange(() => phone?.render());
 
 renderInstruments();
 setSidebar(pref(store.KEYS.instrumentsCollapsed, matchMedia('(max-width: 820px)').matches), false);

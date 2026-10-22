@@ -13,10 +13,17 @@
 <meta property="og:url" content="https://polyrhythmic.design/polytoggle/">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "polytoggle", "url": "https://polyrhythmic.design/polytoggle/", "description": "A free online polyrhythm drum machine and microtonal sequencer. Every lane loops on its own length, and one switch makes them loop together.", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any (web browser)", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}</script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="polytoggle">
+<meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,add_box,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,delete,download,drag_indicator,edit,expand_less,expand_more,folder_open,graphic_eq,help,ink_eraser,keyboard,layers_clear,library_add,menu,note_add,open_in_new,pause,play_arrow,redo,save,screen_rotation,skip_previous,undo,upload,volume_up&amp;display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,add_box,add_to_home_screen,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,delete,download,drag_indicator,edit,expand_less,expand_more,folder_open,fullscreen,fullscreen_exit,graphic_eq,help,ink_eraser,keyboard,layers_clear,library_add,menu,note_add,open_in_new,pause,play_arrow,redo,save,screen_rotation,skip_previous,undo,upload,volume_up&amp;display=block">
 <link rel="preload" href="../shared/fonts/IBMPlexMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared/tokens.css">
 <link rel="stylesheet" href="../shared/components.css">
@@ -123,6 +130,7 @@
   <div class="pt-sec pt-sec--lane" id="lane-section">
     <div class="pt-sec__head"><span class="pr-eyebrow">Lane</span><h2 class="pt-sec__title" id="lane-title"></h2>
       <button class="pt-renamebtn pr-phone-only" type="button" id="rename-lane" aria-label="Rename lane"><span class="pr-icon" aria-hidden="true">edit</span></button>
+      <button class="pt-renamebtn pr-phone-only" type="button" id="p-delete-lane" aria-label="Delete lane"><span class="pr-icon" aria-hidden="true">delete</span></button>
       <button class="pt-textbtn pr-desk-only" type="button" id="delete-lane" data-info="delete-lane"><span class="pr-icon" aria-hidden="true">delete</span>Delete lane</button>
     </div>
     <div class="pt-lanectl pr-phone-only">
@@ -144,7 +152,6 @@
       <label class="pt-param" data-info="sustain"><span class="pt-param__label">Sustain</span><span class="pt-param__row"><input class="pt-param__input" id="env-sustainPct" type="number" min="0" max="100" autocomplete="off"><span class="pt-param__unit">%</span></span><i class="pt-param__bar" aria-hidden="true"></i></label>
       <label class="pt-param" data-info="release"><span class="pt-param__label">Release</span><span class="pt-param__row"><input class="pt-param__input" id="env-releaseMs" type="number" min="0" max="5000" autocomplete="off"><span class="pt-param__unit">ms</span></span><i class="pt-param__bar" aria-hidden="true"></i></label>
     </div>
-    <button class="pt-textbtn pt-sec__delete pr-phone-only" type="button" id="p-delete-lane"><span class="pr-icon" aria-hidden="true">delete</span>Delete lane</button>
   </div>
   <div class="pt-sec pt-sec--note" id="note-section">
     <div class="pt-sec__head"><span class="pr-eyebrow">Note</span><span class="pr-swatch" id="note-chip" hidden></span><h2 class="pt-sec__title" id="note-title"></h2><span class="pt-readout" id="note-readout"></span><button class="pt-textbtn pt-note-delete pr-desk-only" type="button" id="delete-note" data-info="delete-note" hidden><span class="pr-icon" aria-hidden="true">delete</span>Delete note</button></div>

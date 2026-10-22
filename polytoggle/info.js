@@ -89,5 +89,7 @@ export const HELP = [
   ['Scenes', 'Five scenes share the same lanes, each with its own notes and settings. Tap 1–5 to switch on the next beat. Duplicate and Clear are in the menu.'],
   ['Lanes', 'Tap a lane’s name to select it: solo, mute, beats, volume, pan, tuning and envelope. Up to 8 lanes, each 1–20 beats.'],
   ['Notes', 'Pitch sets the hue, noise the saturation, volume the lightness. Octave shows on the label, not as a color.'],
+  ['Settings', 'Drag a value sideways to change it, like a slider. You hear the note as it changes. BPM works the same way.'],
   ['Saving', 'Songs save in this browser. Clearing browser data deletes them, so export a song file to keep a copy.'],
+  ['Full screen', 'Add to Home Screen in the menu puts polytoggle on your Home Screen, where it opens with no browser bars.'],
 ];
