@@ -27,6 +27,7 @@ const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text
  *   renameSong(), newSong(), openEntries(close), save(), exportSong(), exportWav(),
  *   duplicateScene(), clearScene(), canDuplicateScene(),
  *   zoom: { min, max, get(), set(v) }, master: { get(), set(pos), text() },
+ *   fullscreen: { supported(), active(), toggle() },
  * }
  */
 export function setupPhone(api) {
@@ -84,6 +85,11 @@ export function setupPhone(api) {
   masterRange.addEventListener('input', () => api.master.set(Number(masterRange.value)));
   masterRange.addEventListener('change', () => api.master.done());
 
+  // Full screen hides the browser's bars (Android). Left out where the browser can't (iPhone Safari).
+  const fsItem = api.fullscreen.supported()
+    ? menuItem({ icon: 'fullscreen', label: 'Full screen', hint: 'off', attrs: { 'aria-pressed': 'false' }, onClick: () => { api.fullscreen.toggle(); frame.close(); } })
+    : null;
+
   const helpDialog = buildHelp();
   menu.body.append(
     menuGroup('Song'),
@@ -101,6 +107,7 @@ export function setupPhone(api) {
       zoomRange,
       h('button', { class: 'pt-mrow__step', type: 'button', 'aria-label': 'Zoom in', text: '+', onclick: () => { api.zoom.set(api.zoom.get() + 8); render(); } })),
     h('div', { class: 'pt-mrow pt-mrow--master' }, h('span', { class: 'pt-mrow__label', text: 'Master volume', 'aria-hidden': 'true' }), masterRange, masterOut),
+    ...(fsItem ? [fsItem] : []),
     menuItem({ icon: 'help', label: 'How polytoggle works', onClick: () => { frame.close(); helpDialog.showModal(); helpDialog.querySelector('button').focus(); }, attrs: { class: 'pr-mi pt-mi--help' } }),
     menuFooter('polytoggle'),
   );
@@ -134,6 +141,12 @@ export function setupPhone(api) {
     dupScene.disabled = !api.canDuplicateScene();
     if (document.activeElement !== zoomRange) zoomRange.value = String(api.zoom.get());
     if (document.activeElement !== masterRange) masterRange.value = String(api.master.get());
+    if (fsItem) {
+      const on = api.fullscreen.active();
+      fsItem.setAttribute('aria-pressed', String(on));
+      fsItem.querySelector('.pr-mi__hint').textContent = on ? 'on' : 'off';
+      fsItem.querySelector('.pr-icon').textContent = on ? 'fullscreen_exit' : 'fullscreen';
+    }
     masterOut.textContent = api.master.text();
     masterRange.setAttribute('aria-valuetext', api.master.text());
   }

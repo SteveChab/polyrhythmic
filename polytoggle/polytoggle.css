@@ -253,11 +253,17 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .is-phone .pr-note[aria-selected="true"] .pr-note__grab::after { content: ""; width: 2px; height: 12px; background: var(--ink); }
 .is-phone .pr-note__grab::before { content: ""; position: absolute; inset: -8px -15px; }
 
-/* The settings drawer: 292px beside the stage, Note and Lane tabs, cells two to a row. */
-.is-phone .pt-dock { display: flex; min-height: 0; }
+/* The settings panel (Oct 21): the full height at the right edge, over the end of the top bar (the scene
+   tabs), with the stage keeping the rest. Note and Lane tabs, cells three (Note) or four (Lane) to a row,
+   and a nudge bar at the foot. It never scrolls: everything fits from 340px of height up, and below that
+   the cells and bar tighten and the envelope curve is dropped. */
+.is-phone { --pt-panel-w: 320px; }
+.is-phone .pt-dock { position: fixed; z-index: 25; top: 0; right: 0; bottom: 0; display: flex; min-height: 0; }
+.is-phone body.pt-has-selection .pt-main { padding-right: var(--pt-panel-w); }
 .is-phone .pt-panelbar, .is-phone .pt-collapse { display: none; }
 .is-phone .pt-panel {
-  display: flex; flex-direction: column; width: 292px; height: auto; min-height: 0; overflow: hidden auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; box-sizing: border-box; width: calc(var(--pt-panel-w) + env(safe-area-inset-right)); height: auto; min-height: 0;
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) 0; overflow: hidden auto; overscroll-behavior: contain;
   border-top: 0; border-left: var(--stroke-rule) solid var(--ink); background: var(--paper);
 }
 .is-phone .pt-panel[data-tab="note"] .pt-sec--lane, .is-phone .pt-panel[data-tab="lane"] .pt-sec--note { display: none; }
@@ -272,16 +278,16 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .pt-tab:disabled { color: var(--off); cursor: default; }
 .pt-tabs__close { display: flex; align-items: center; justify-content: center; width: var(--size-target); height: var(--size-target); padding: 0; border: 0; border-left: var(--stroke-rule) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; }
 .pt-tabs__close .pr-icon { font-size: 22px; }
-:is(.pt-tab, .pt-tabs__close, .pt-ctl, .pt-renamebtn):focus-visible { outline-offset: -3px; }
+:is(.pt-tab, .pt-tabs__close, .pt-ctl, .pt-renamebtn, .pt-nudge__btn):focus-visible { outline-offset: -3px; }
 .is-phone .pt-sec { flex: none; gap: 0; padding: 0; background: var(--paper); border-right: 0; }
-.is-phone .pt-sec__head { flex-wrap: wrap; height: auto; min-height: var(--size-target); gap: 2px var(--space-8); padding: var(--space-6) 0 var(--space-6) var(--space-12); }
+.is-phone .pt-sec__head { flex-wrap: wrap; height: auto; min-height: var(--size-target); gap: 2px var(--space-8); padding: var(--space-4) 0 var(--space-4) var(--space-12); }
 .is-phone .pt-sec__head .pr-eyebrow { display: none; }
 .is-phone .pt-sec__head .pr-swatch { width: 16px; height: 16px; }
 .is-phone .pt-sec__title { flex: 1 1 0; font-size: 14px; }
 .is-phone .pt-sec--note .pt-sec__head { padding-right: var(--space-12); }
 .is-phone .pt-readout { order: 3; flex-basis: 100%; margin-left: 0; padding-bottom: var(--space-4); overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
 .pt-renamebtn { display: flex; align-items: center; justify-content: center; flex: none; width: var(--size-target); height: var(--size-target); padding: 0; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
-.pt-lanectl { display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-8) var(--space-10); }
+.pt-lanectl { display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-8) var(--space-6); }
 .pt-ctl {
   display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--size-target); height: var(--size-target); padding: 0;
   border: var(--stroke-hair) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; font: 600 14px/1 var(--font-mono);
@@ -291,16 +297,34 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 .pt-lanectl__gap { flex: 1; }
 .pt-lanectl__count { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 28px; font: 600 16px/1 var(--font-mono); }
 .pt-lanectl__unit { font: 500 8px/1 var(--font-mono); text-transform: uppercase; }
-.is-phone .pt-cells6 { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-left: 0; border-top: var(--stroke-hair) solid var(--ink); }
-.is-phone .pt-param { margin-left: 0; border: 0; border-bottom: var(--stroke-hair) solid var(--ink); padding: 7px 10px 9px; touch-action: pan-y; cursor: text; }
+
+/* The cells: hairlines are the grid's gaps. Tapping one gives it focus (no keyboard) and the nudge bar takes it. */
+.is-phone .pt-cells6 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--stroke-hair); padding-left: 0; background: var(--ink); border-block: var(--stroke-hair) solid var(--ink); }
+.is-phone .pt-sec--lane .pt-cells6 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.is-phone .pt-sec--lane .pt-param[data-info="tuning"] { grid-column: span 2; }
+.is-phone .pt-param { height: 50px; margin-left: 0; border: 0; padding: 6px 8px 8px; touch-action: manipulation; cursor: default; }
+.is-phone .pt-param__input { cursor: default; }
 .is-phone .pt-sec--lane .pt-param { background: var(--panel); }
-.is-phone .pt-sec--note .pt-param:nth-child(odd),
-.is-phone .pt-sec--lane .pt-param:is(:nth-child(1), :nth-child(4), :nth-child(6), :nth-child(8)) { border-right: var(--stroke-hair) solid var(--ink); }
-.is-phone .pt-param__input, .is-phone .pt-param__select { font-size: 16px; } /* 16px, or iOS zooms in on focus */
-.is-phone .pt-param--env { order: 1; grid-column: 1 / -1; height: 76px; padding: var(--space-10) var(--space-12); border-bottom: 0; background: var(--paper) !important; }
-.is-phone .pt-param--env .pt-env { height: 44px; border: var(--stroke-hair) solid var(--ink); box-sizing: border-box; }
-.is-phone .pt-sec__delete { align-self: flex-start; min-height: var(--size-target); margin: var(--space-4) var(--space-12) var(--space-12); font-size: 13px; }
-.is-phone .pt-sec__delete .pr-icon { font-size: 20px; }
+.is-phone .pt-param__input, .is-phone .pt-param__select { font-size: 16px; }
+.is-phone .pt-param--env { order: 1; grid-column: 1 / -1; flex-direction: row; align-items: center; gap: var(--space-10); height: 44px; padding: 6px var(--space-12); background: var(--paper) !important; }
+.is-phone .pt-param--env .pt-env { flex: 1 1 auto; min-width: 0; height: 28px; border: var(--stroke-hair) solid var(--ink); box-sizing: border-box; }
+
+/* The nudge bar (nudge.js): keyboard button, then coarse and fine steps either side, for the focused cell. */
+.pt-nudge { display: grid; grid-template-columns: 52px repeat(4, minmax(0, 1fr)); flex: none; margin-top: auto; height: 52px; border-top: var(--stroke-rule) solid var(--ink); background: var(--paper); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pt-nudge__btn { display: flex; align-items: center; justify-content: center; min-width: 0; padding: 0; border: 0; border-left: var(--stroke-hair) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; touch-action: manipulation; font: 600 14px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.pt-nudge__btn:first-child { border-left: 0; }
+.pt-nudge__btn--coarse { background: var(--panel); }
+.pt-nudge__btn:active:not(:disabled) { background: var(--ink); color: var(--paper); }
+.pt-nudge__btn:disabled { color: var(--off); cursor: default; }
+.pt-nudge__kbd .pr-icon { font-size: 22px; }
+.pt-nudge--float { position: fixed; z-index: 26; top: 62px; left: calc(env(safe-area-inset-left) + var(--size-rail) + var(--space-8)); width: 320px; max-width: calc(100vw - var(--size-rail) - 16px); border: var(--stroke-rule) solid var(--ink); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.12); }
+@media (max-height: 340px) {
+  .is-phone .pt-param { height: 46px; padding-top: 5px; padding-bottom: 6px; }
+  .is-phone .pt-param--env { display: none; }
+  .is-phone .pt-lanectl { padding-bottom: var(--space-4); }
+  .is-phone .pt-noteacts { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+  .pt-nudge { height: 44px; }
+}
 .pt-noteacts { display: flex; gap: var(--space-8); padding: var(--space-8) var(--space-12) var(--space-10); }
 .pt-noteacts .pr-btn { flex: 1 1 0; height: var(--size-target); justify-content: center; }
 

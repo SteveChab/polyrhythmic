@@ -18,6 +18,8 @@ import { getAudioContext, unlockAudio, heardTime, createFrameLoop, createSchedul
 import { bindPlayPause } from '../shared/ui.js';
 import { isPhone, onPhoneChange } from '../shared/phone.js';
 import { setupPhone } from './phone.js';
+import { createNudge } from './nudge.js';
+import { canFullscreen, isFullscreen, enterFullscreen, exitFullscreen, onFullscreenChange } from '../shared/fullscreen.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1540,6 +1542,7 @@ const SCRUB = {
 let scrub = null;
 $('panel').addEventListener('pointerdown', (e) => {
   if (e.button !== 0) return;
+  if (isPhone()) return; // a phone steps values with the nudge bar: a drag there is too twitchy and fights the scroll
   const cell = e.target.closest('.pt-param');
   const input = cell?.querySelector('.pt-param__input');
   if (!input || !SCRUB[input.id] || input.tagName === 'SELECT') return;
@@ -1587,6 +1590,38 @@ $('panel').addEventListener('click', (e) => {
   if (!cell || e.target.matches('input, select')) return;
   cell.querySelector('.pt-param__input')?.focus();
 });
+
+// ---- Phones: value cells take focus without the keyboard, and a nudge bar changes them ----
+// One bar sits at the foot of the settings panel; a second drops under the top bar while BPM has focus.
+// A press (or a whole hold) is one undo step, the same as a scrub.
+const nudgeSession = {
+  begin() { history.seal(); scrubbing = true; },
+  end() { scrubbing = false; history.seal(); renderPanel(); },
+};
+const nudgePitch = {
+  step: (dir) => stepPitchBy(dir),
+  octave: (dir) => { const n = currentNote(); if (n) { commitPitch(n.cents + dir * 1200); renderPanel(); } },
+};
+const panelNudge = createNudge({ session: nudgeSession, pitch: nudgePitch, label: 'Change the selected value' });
+$('panel').append(panelNudge.el);
+panelNudge.el.classList.add('pr-phone-only');
+panelNudge.watch($('panel'));
+const bpmNudge = createNudge({ session: nudgeSession, pitch: nudgePitch, float: true, label: 'Change the tempo' });
+bpmNudge.el.classList.add('pr-phone-only');
+document.querySelector('.pr-app').append(bpmNudge.el);
+bpmNudge.watch($('bpm'));
+
+/** On a phone the cells and BPM never raise the keyboard on their own; the bar's keyboard button does. */
+function applyPhoneInputs() {
+  for (const el of document.querySelectorAll('#panel input.pt-param__input, #bpm')) {
+    if (isPhone()) el.inputMode = 'none';
+    else if (el.id === 'bpm') el.inputMode = 'decimal';
+    else el.removeAttribute('inputmode');
+  }
+  if (!isPhone()) { panelNudge.setTarget(null); bpmNudge.setTarget(null); }
+}
+applyPhoneInputs();
+onPhoneChange(applyPhoneInputs);
 
 // Esc in a settings field goes back to the same cell on the stage.
 $('panel').addEventListener('keydown', (e) => {
@@ -1690,6 +1725,14 @@ phone = setupPhone({
   clearScene: () => clearSceneAt(scene),
   canDuplicateScene: () => !S.sceneIsEmpty(sc()) && S.nextEmptyScene(song, scene) >= 0,
   zoom: { min: ZOOM_MIN, max: ZOOM_MAX, get: () => zoom, set: setZoom },
+  fullscreen: {
+    supported: canFullscreen,
+    active: isFullscreen,
+    // Called straight from a tap: entering full screen needs the tap's user gesture.
+    toggle() {
+      if (isFullscreen()) { setPref(store.KEYS.fullscreen, 'off'); exitFullscreen(); } else { setPref(store.KEYS.fullscreen, 'on'); enterFullscreen(); }
+    },
+  },
   master: {
     get: () => dbToPos(song.masterDb),
     set: (p) => commit(S.setMasterDb(song, posToDb(p)), { key: 'master', stage: false }),
@@ -1698,6 +1741,17 @@ phone = setupPhone({
   },
 });
 onPhoneChange(() => { eraseMode = false; renderTop(); renderStage(); renderPanel(); });
+
+// Phones, landscape: the first tap hides the browser's bars (Android; iPhone Safari can't). Once per visit,
+// and never again if Full screen was turned off in the Menu. Leaving it with the system gesture is respected.
+function autoFullscreen() {
+  if (!isPhone() || !canFullscreen() || isFullscreen() || pref(store.KEYS.fullscreen, 'on') === 'off') return;
+  if (!matchMedia('(orientation: landscape)').matches) return;
+  removeEventListener('pointerup', autoFullscreen, true);
+  enterFullscreen();
+}
+addEventListener('pointerup', autoFullscreen, true);
+onFullscreenChange(() => phone?.render());
 
 renderInstruments();
 setSidebar(pref(store.KEYS.instrumentsCollapsed, matchMedia('(max-width: 820px)').matches), false);
