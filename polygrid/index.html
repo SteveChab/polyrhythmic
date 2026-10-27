@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,download,drag_indicator,edit,expand_less,expand_more,folder_open,keyboard,library_add,library_music,menu,note_add,open_in_new,pause,play_arrow,redo,save,screen_rotation,skip_previous,undo,upload,view_week,volume_up&amp;display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,download,drag_indicator,edit,expand_less,expand_more,folder_open,fullscreen,fullscreen_exit,keyboard,library_add,library_music,menu,note_add,open_in_new,pause,play_arrow,redo,save,screen_rotation,skip_previous,undo,upload,view_week,volume_up&amp;display=block">
 <link rel="preload" href="../shared/fonts/IBMPlexMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared/tokens.css">
 <link rel="stylesheet" href="../shared/components.css">
@@ -41,10 +41,6 @@
     <label class="pr-inline">Tuning
       <select class="pr-select pg-select" id="tuning"></select>
     </label>
-    <div class="pg-group pg-group--switch">
-      <span class="pg-switch-label" id="snap-label" aria-hidden="true">Snap to tuning</span>
-      <button class="pr-switch" type="button" role="switch" id="snap" aria-checked="false" aria-label="Snap to tuning"></button>
-    </div>
     <span class="pr-topbar__spacer"></span>
   </div>
 </header>
@@ -78,7 +74,7 @@
         <div class="pg-scale" id="scale" aria-hidden="true"><div class="pg-scale__rule"></div></div>
         <span></span>
       </div>
-      <p class="pg-speed__note"><span class="pg-fuse-key" aria-hidden="true">1</span>Where each row fuses into a tone: 20 beats a second. Snap and tuning never change the ratios.</p>
+      <p class="pg-speed__note"><span class="pg-fuse-key" aria-hidden="true">1</span>Where each row fuses into a tone: 20 beats a second. Tuning never changes the ratios.</p>
     </div>
   </section>
 

@@ -36,11 +36,6 @@ export function wavelengthFromFrequency(freq) {
   return (SPEED_OF_LIGHT / light) * 1e9;
 }
 
-/** Frequency in the G4 to F#5 window for a wavelength in nm. */
-export function frequencyFromWavelength(nm) {
-  return SPEED_OF_LIGHT / (nm * 1e-9) / 2 ** LIFT_OCTAVES;
-}
-
 /**
  * Dan Bruton's wavelength-to-RGB, channels 0..1, gamma 0.8.
  * The edge intensity falloff scales all three channels equally, so it never moves the hue;

@@ -50,6 +50,29 @@ test('stepping rotates one note of the tuning, round the octave', () => {
   assert.match(m.noteReadout({ hue: h19, octave: 4 }, '19-edo').step, /^step \d+ of 19$/);
 });
 
+test('5, 7 and 9-EDO: arrow keys walk N steps round the wheel, snapping is stable, every step has a tick', () => {
+  for (const n of [5, 7, 9]) {
+    const id = `${n}-edo`;
+    const start = m.snapHue(hueOfNote('C'), id);
+    let hue = start;
+    const seen = new Set();
+    for (let i = 0; i < n; i++) {
+      assert.match(m.noteReadout({ hue, octave: 4 }, id).step, new RegExp(`^step \\d+ of ${n}$`));
+      seen.add(m.noteReadout({ hue, octave: 4 }, id).step);
+      hue = m.stepHue(hue, id, 1);
+    }
+    assert.equal(seen.size, n, `${id}: ${n} distinct steps`);
+    const turn = Math.abs(hue - start);
+    assert.ok(Math.min(turn, 360 - turn) < 1e-6, `${id}: N steps up return to the start`);
+    assert.ok(m.stepHue(start, id, -1) !== start, `${id}: down moves`);
+    near(m.snapHue(m.snapHue(100, id), id), m.snapHue(100, id), 1e-6);
+    const ticks = m.wheelTicks(id);
+    assert.equal(ticks.filter((t) => t.named).length, 12, `${id}: 12 named ticks stay`);
+    const gcd = (a, b) => (b ? gcd(b, a % b) : a); // steps that land on a 12-EDO note share its tick
+    assert.equal(ticks.length, 12 + n - gcd(n, 12), `${id}: a tick per step`);
+  }
+});
+
 test('master saturation grays every color; master lightness keeps each on its own side of the true color', () => {
   const dot = { hue: 28, sat: 100, light: 50 };
   const c = m.finalColor(dot, { sat: 80, light: 100 });

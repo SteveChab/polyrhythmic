@@ -61,7 +61,8 @@
 }
 .pg-lines > span { border-left: var(--stroke-hair) solid var(--divider); }
 .pg-sweep { position: absolute; inset: -6px 0; pointer-events: none; overflow: hidden; }
-.pg-sweep__line { position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--ink); will-change: transform; }
+.pg-sweep__line { position: absolute; inset: 0; will-change: transform; } /* fills the stage, so the script moves it in % */
+.pg-sweep__line::before { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--ink); }
 
 .pg-strip { position: relative; height: 72px; --fill: var(--paper); --fill-ink: var(--ink); }
 .pg-cells { display: grid; grid-template-columns: repeat(var(--beats, 1), minmax(0, 1fr)); height: 64px; }
@@ -74,7 +75,7 @@
 .pg-under { height: var(--size-playhead); margin-top: var(--space-4); position: relative; }
 .pg-under__bar {
   position: absolute; top: 0; left: 0; height: 100%; width: calc(100% / var(--beats, 1));
-  padding: 0 2px; box-sizing: border-box; will-change: transform;
+  padding: 0 2px; box-sizing: border-box; will-change: transform; transform: translateX(calc(var(--i, 0) * 100%));
 }
 .pg-under__bar::after { content: ""; display: block; height: 100%; background: var(--ink); }
 .pg-band {
@@ -106,13 +107,15 @@
 .pg-big::-moz-range-thumb { width: 20px; height: 32px; }
 .pg-scale { position: relative; height: 42px; margin: 0 10px; }
 .pg-scale__rule { position: absolute; top: 22px; left: 0; right: 0; border-top: var(--stroke-hair) solid var(--ink); }
-.pg-tick { position: absolute; top: 22px; height: 6px; border-left: var(--stroke-hair) solid var(--ink); }
-.pg-tick__label { position: absolute; top: 32px; font: 500 11px/1 var(--font-mono); white-space: nowrap; }
+.pg-tick { position: absolute; top: 22px; left: var(--p); height: 6px; border-left: var(--stroke-hair) solid var(--ink); }
+.pg-tick__label { position: absolute; top: 32px; left: var(--p); transform: translateX(-50%); font: 500 11px/1 var(--font-mono); white-space: nowrap; }
+.pg-tick__label[data-edge="start"] { transform: none; }
+.pg-tick__label[data-edge="end"] { transform: translateX(-100%); }
 .pg-fuse, .pg-fuse-key {
   width: 18px; height: 18px; box-sizing: border-box; border: var(--stroke-hair) solid var(--ink); background: var(--paper);
   display: inline-flex; align-items: center; justify-content: center; font: 600 10px/1 var(--font-mono);
 }
-.pg-fuse { position: absolute; top: 0; margin-left: -9px; }
+.pg-fuse { position: absolute; top: 0; left: var(--p); margin-left: -9px; }
 .pg-fuse-key { width: 14px; height: 14px; font-size: 9px; flex-shrink: 0; }
 .pg-speed__note { margin: 0; display: flex; align-items: center; justify-content: center; gap: var(--space-8); text-align: center; font: 400 11px/1.3 var(--font-mono); color: var(--muted); }
 
@@ -130,6 +133,8 @@
 .pg-page__row > span { padding: 0 2px; box-sizing: border-box; min-width: 0; }
 .pg-page__row > span::after { content: ""; display: block; height: 100%; box-sizing: border-box; border: var(--stroke-hair) solid var(--ink); background: var(--paper); }
 .pg-page__row.is-muted > span::after { border-style: dashed; }
+.pg-rowname__n { font-weight: 700; }
+.pg-rowname__n, .pg-sheet__mute { display: none; }
 .pg-page-fig figcaption { font: 400 11px/1.3 var(--font-mono); color: var(--muted); }
 .pg-callout__text { flex: 1 1 300px; max-width: 460px; display: flex; flex-direction: column; gap: var(--space-10); }
 .pg-callout__text p { margin: 0; font-size: 14px; line-height: 1.5; }
@@ -213,3 +218,84 @@
 .pr-drawer .pg-callout__text > .pr-eyebrow { display: none; }
 .pg-msettings .pg-group:not(.pg-group--switch) > .pr-icon { display: none; }
 .pg-msettings .pg-group:not(.pg-group--switch) > .pr-sr { position: static; width: auto; height: auto; overflow: visible; clip: auto; flex: none; font: 500 14px/1 var(--font-sans); }
+
+/* ---------- Phones, upright (spec, Layout: Phones, Upright) ----------
+   The phone is the page: the three rows stand up as columns, each cut into its beats from top to bottom, with the
+   shared grid faint across them. The speed slider stands at the right as a fader, Tone at the top, Rhythm at the bottom. */
+@media (orientation: portrait) {
+  .is-phone .pr-app > .pr-topbar { display: grid; grid-template-columns: 34px 44px minmax(0, 1fr); column-gap: var(--space-8); align-items: center; padding-bottom: var(--space-6); min-width: 0; }
+  .is-phone .pr-topbar .pr-logo { grid-area: 1 / 1; height: 56px; align-items: center; }
+  .is-phone .pr-topbar #play { grid-area: 1 / 2; }
+  .is-phone .pr-topbar .pr-logo { border: 0; padding: 0; }
+  .is-phone .pg-headline { grid-area: 2 / 1 / 3 / -1; justify-self: start; flex-direction: row; align-items: baseline; gap: var(--space-12); padding: 0; min-height: 44px; max-width: 100%; min-width: 0; }
+  .is-phone .pg-ratio { font-size: 26px; }
+  .is-phone .pg-sounds { flex: 0 1 auto; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .is-phone .pg-gridline { display: none; }
+
+  .is-phone #main { grid-column: 1; grid-row: 2; overflow: hidden; }
+  .is-phone .pg-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 140px; grid-template-rows: minmax(0, 1fr) auto; height: 100%; min-height: 0; }
+  .is-phone .pg-rows {
+    grid-area: 1 / 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto minmax(0, 1fr);
+    gap: 0 var(--space-8); min-height: 0; padding: var(--space-10) var(--space-4) var(--space-8) var(--space-12);
+  }
+  .is-phone :is(.pg-headers, .pg-stage, .pg-strips) { display: contents; }
+  .is-phone .pg-headers > :nth-child(1), .is-phone .pg-strips > :nth-child(1) { grid-column: 1; }
+  .is-phone .pg-headers > :nth-child(2), .is-phone .pg-strips > :nth-child(2) { grid-column: 2; }
+  .is-phone .pg-headers > :nth-child(3), .is-phone .pg-strips > :nth-child(3) { grid-column: 3; }
+  .is-phone .pg-headers > * { grid-row: 1; margin-bottom: var(--space-8); }
+  .is-phone .pg-strips > * { grid-row: 2; }
+
+  /* Column head: name and beat count over − and +, 44px tall each. */
+  .is-phone .pg-rowhead { height: auto; flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; }
+  .is-phone .pg-rowname { flex: none; height: 44px; padding: 0 var(--space-6); }
+  .is-phone .pg-rowname__n { display: inline; }
+  .is-phone .pg-rowhead__top { display: grid; grid-template-columns: 1fr 1fr; }
+  .is-phone .pg-rowhead .pg-mute, .is-phone .pg-rowhead .pg-beats-input { display: none; }
+  .is-phone .pg-rowhead .pr-dense { width: auto; min-width: 0; height: 44px; }
+  .is-phone .pg-sheet__mute { display: flex; }
+  .is-phone .pg-griddrawer:not([hidden]) { width: auto; }
+  /* The grid drawer stacks: the figure on top at full width, then the story. */
+  .is-phone .pr-drawer .pg-callout { flex-direction: column; flex-wrap: nowrap; }
+  .is-phone .pr-drawer .pg-page-fig { flex: none; width: 100%; }
+  .is-phone .pr-drawer .pg-callout__text { flex: none; max-width: none; }
+
+  /* The columns: beats run top to bottom. */
+  .is-phone .pg-strip { height: auto; min-height: 0; }
+  .is-phone .pg-cells { height: 100%; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(var(--beats, 1), minmax(0, 1fr)); }
+  .is-phone .pg-cell { padding: 1px 0; }
+  .is-phone .pg-cell > span { height: 100%; padding: 2px var(--space-4); }
+  .is-phone :is(.pg-band, .pg-off) { height: 100%; margin: 0; }
+  .is-phone .pg-band { flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: var(--space-4); white-space: normal; padding: var(--space-8); }
+  .is-phone .pg-band__hz { font-size: 10px; line-height: 1.3; overflow-wrap: anywhere; }
+  .is-phone .pg-under { position: absolute; top: 0; bottom: 0; right: -6px; width: 4px; height: auto; margin: 0; }
+  .is-phone .pg-under__bar { width: 100%; height: calc(100% / var(--beats, 1)); padding: 1px 0; transform: translateY(calc(var(--i, 0) * 100%)); }
+  .is-phone .pg-lines {
+    grid-area: 2 / 1 / 3 / -1; position: static; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(var(--cols, 1), minmax(0, 1fr));
+    border-right: 0; border-bottom: var(--stroke-hair) solid var(--divider);
+  }
+  .is-phone .pg-lines > span { border-left: 0; border-top: var(--stroke-hair) solid var(--divider); }
+  .is-phone .pg-sweep { grid-area: 2 / 1 / 3 / -1; position: relative; inset: auto; }
+  .is-phone .pg-sweep__line::before { top: -1px; bottom: auto; left: 0; right: 0; width: auto; height: 2px; }
+
+  /* The fader and the speed readout. */
+  .is-phone :is(.pg-speed, .pg-speed__inner) { display: contents; }
+  .is-phone .pg-speed__label { grid-area: 2 / 1 / 3 / -1; justify-self: center; padding: var(--space-6) 0 var(--space-12); font-size: 26px; }
+  .is-phone .pg-speed__grid { grid-area: 1 / 2; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; row-gap: var(--space-6); padding: var(--space-10) 2px var(--space-8) 0; min-height: 0; }
+  .is-phone .pg-speed__grid > :nth-child(1) { grid-area: 3 / 1 / 4 / 3; justify-self: start; }
+  .is-phone .pg-speed__grid > :nth-child(2) { grid-area: 2 / 1; }
+  .is-phone .pg-speed__grid > :nth-child(3) { grid-area: 1 / 1 / 2 / 3; justify-self: start; }
+  .is-phone .pg-speed__grid > :nth-child(4), .is-phone .pg-speed__grid > :nth-child(6) { display: none; }
+  .is-phone .pg-speed__grid > :nth-child(5) { grid-area: 2 / 2; }
+  .is-phone .pg-big { writing-mode: vertical-lr; direction: rtl; width: 44px; height: 100%; }
+  .is-phone .pg-big::-webkit-slider-runnable-track { width: 10px; height: auto; }
+  .is-phone .pg-big::-webkit-slider-thumb { width: 32px; height: 20px; margin: 0 0 0 -11px; }
+  .is-phone .pg-big::-moz-range-track, .is-phone .pg-big::-moz-range-progress { width: 10px; height: auto; }
+  .is-phone .pg-big::-moz-range-thumb { width: 32px; height: 20px; }
+  .is-phone .pg-scale { height: 100%; margin: 10px 0; }
+  .is-phone .pg-scale__rule { top: 0; bottom: 0; left: 24px; right: auto; border-top: 0; border-left: var(--stroke-hair) solid var(--ink); }
+  .is-phone .pg-tick { top: auto; bottom: var(--p); left: 24px; right: auto; width: 6px; height: 0; border-left: 0; border-top: var(--stroke-hair) solid var(--ink); }
+  .is-phone .pg-tick__label { top: auto; bottom: var(--p); left: 32px; transform: translateY(50%); font-size: 10px; }
+  .is-phone .pg-tick__label[data-edge="start"] { transform: none; }
+  .is-phone .pg-tick__label[data-edge="end"] { transform: translateY(100%); }
+  .is-phone .pg-fuse { top: auto; bottom: var(--p); left: 0; margin: 0 0 -9px; }
+}

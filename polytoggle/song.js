@@ -276,7 +276,6 @@ export const dbToPos = (db) => Math.round(100 * (1 - Math.sqrt(Math.min(1, Math.
 /** Seconds for `beats` beats (eighth notes) at `bpm` (quarter notes a minute). */
 export const beatsToSeconds = (beats, bpm) => (beats * 30) / bpm; // BPM counts quarter notes; a beat is an eighth note
 
-export const noteAt = (laneSettings, beat) => laneSettings.notes.find((n) => beat >= n.beat && beat < n.beat + n.length) ?? null;
 
 // ---------- Global edits ----------
 

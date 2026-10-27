@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,add_box,arrow_back,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,delete,download,drag_indicator,edit,expand_less,expand_more,folder_open,image,keyboard,library_add,menu,note_add,open_in_new,pause,play_arrow,redo,restart_alt,save,screen_rotation,skip_previous,undo,upload,volume_up&amp;display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=fullscreen,fullscreen_exit,add,add_box,arrow_back,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,delete,download,drag_indicator,edit,expand_less,expand_more,folder_open,image,keyboard,library_add,menu,note_add,open_in_new,pause,play_arrow,redo,restart_alt,save,screen_rotation,skip_previous,undo,upload,volume_up&amp;display=block">
 <link rel="preload" href="../shared/fonts/IBMPlexMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared/tokens.css">
 <link rel="stylesheet" href="../shared/components.css">
@@ -29,7 +29,12 @@
 <header class="pr-topbar">
   <div class="pr-topbar__row">
     <a class="pr-logo" href="../" aria-label="polycolor, go to polyrhythmic.design home"><svg class="poly" viewBox="0 0 17 17" width="34" height="34" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path fill="#111111" d="M1 0h15v1h-15zM1 1h1v1h-1zM15 1h1v1h-1zM1 2h1v1h-1zM15 2h1v1h-1zM1 3h1v1h-1zM15 3h1v1h-1zM1 4h1v1h-1zM15 4h1v1h-1zM1 5h1v1h-1zM15 5h1v1h-1zM1 6h1v1h-1zM15 6h1v1h-1zM1 7h1v1h-1zM15 7h1v1h-1zM1 8h1v1h-1zM15 8h1v1h-1zM1 9h1v1h-1zM5 9h2v1h-2zM10 9h2v1h-2zM15 9h1v1h-1zM0 10h2v1h-2zM5 10h2v1h-2zM10 10h2v1h-2zM15 10h2v1h-2zM1 11h1v1h-1zM7 11h1v1h-1zM9 11h1v1h-1zM15 11h1v1h-1zM1 12h1v1h-1zM8 12h1v1h-1zM15 12h1v1h-1zM1 13h1v1h-1zM15 13h1v1h-1zM1 14h15v1h-15zM4 15h2v1h-2zM11 15h2v1h-2zM4 16h3v1h-3zM11 16h3v1h-3z"/><path fill="#9a9a9a" d="M2 1h13v1h-13zM2 2h1v1h-1zM14 2h1v1h-1zM2 3h1v1h-1zM14 3h1v1h-1zM2 4h1v1h-1zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM14 12h1v1h-1zM2 13h13v1h-13z"/><path fill="#ffffff" d="M3 2h11v1h-11zM3 3h1v1h-1zM5 3h3v1h-3zM9 3h3v1h-3zM13 3h1v1h-1zM3 4h11v1h-11zM3 5h1v1h-1zM5 5h2v1h-2zM8 5h1v1h-1zM10 5h2v1h-2zM13 5h1v1h-1zM3 6h11v1h-11zM3 7h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM13 7h1v1h-1zM3 8h11v1h-11zM3 9h2v1h-2zM7 9h3v1h-3zM12 9h2v1h-2zM3 10h2v1h-2zM7 10h3v1h-3zM12 10h2v1h-2zM3 11h4v1h-4zM8 11h1v1h-1zM10 11h4v1h-4zM3 12h5v1h-5zM9 12h5v1h-5z"/><path fill="#e60058" d="M4 3h1v1h-1zM9 5h1v1h-1zM8 7h1v1h-1z"/><path fill="#36e600" d="M8 3h1v1h-1zM4 5h1v1h-1zM12 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1z"/><path fill="#7700e6" d="M12 3h1v1h-1zM7 5h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1z"/></svg><span class="t-wordmark" aria-hidden="true">polycolor</span></a>
-    <button class="pr-btn pr-btn--primary pc-chord" type="button" id="chord" aria-label="Play chord"><span class="pr-icon" aria-hidden="true">play_arrow</span><span class="pr-btn__label">Play chord</span></button>
+    <button class="pr-btn pr-btn--transport pr-btn--primary pc-chord" type="button" id="chord" aria-label="Play chord"><span class="pr-icon" aria-hidden="true">play_arrow</span><span class="pr-btn__label pr-sr">Play chord</span></button>
+    <div class="pr-toggle" id="snap-group">
+      <span class="pr-toggle__label pr-toggle__label--off" id="snap-off" aria-hidden="true">Snap</span>
+      <button class="pr-switch" type="button" role="switch" id="snap" aria-checked="false" aria-label="Microtonal: let colors land between notes"></button>
+      <span class="pr-toggle__label pr-toggle__label--on" id="snap-on" aria-hidden="true">Microtonal</span>
+    </div>
     <div class="pr-btngroup">
       <button class="pr-btn pc-iconbtn" type="button" id="undo" title="Undo"><span class="pr-icon" aria-hidden="true">undo</span><span class="pr-sr">Undo</span></button>
       <button class="pr-btn pc-iconbtn" type="button" id="redo" title="Redo"><span class="pr-icon" aria-hidden="true">redo</span><span class="pr-sr">Redo</span></button>
@@ -37,11 +42,6 @@
     <label class="pr-inline">Tuning
       <select class="pr-select pc-select" id="tuning"></select>
     </label>
-    <div class="pr-toggle" id="snap-group">
-      <span class="pr-toggle__label pr-toggle__label--off" id="snap-off" aria-hidden="true">Snap to notes</span>
-      <button class="pr-switch" type="button" role="switch" id="snap" aria-checked="false" aria-label="Microtonal: let colors land between notes"></button>
-      <span class="pr-toggle__label pr-toggle__label--on" id="snap-on" aria-hidden="true">Microtonal</span>
-    </div>
     <label class="pc-group"><span class="pr-icon" aria-hidden="true">volume_up</span><span class="pr-sr">Master volume</span>
       <input class="pr-range pc-master" id="volume" type="range" min="0" max="100" step="1">
     </label>

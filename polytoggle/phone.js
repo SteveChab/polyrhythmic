@@ -1,24 +1,12 @@
-// polytoggle on a phone (spec, Phones): the rail (Add, Erase, Undo, Redo, Menu), the Add drawer,
+// polytoggle on a phone (spec, Phones): the rail (Add, Erase, Undo, Redo, Full, Menu), the Add drawer,
 // the Menu drawer and the "How polytoggle works" dialog. The stage and the settings drawer are the
 // desktop's own elements, laid out again by polytoggle.css under html.is-phone. app.js passes in
 // what this needs; nothing here edits the song itself.
 
-import { createPhoneFrame, buildRotateScreen, menuGroup, menuItem, menuFooter } from '../shared/phone.js';
+import { createPhoneFrame, menuGroup, menuItem, menuFooter, fullscreenControls } from '../shared/phone.js';
 import { HELP } from './info.js';
+import { h, icon } from '../shared/ui.js';
 
-function h(tag, attrs = {}, ...kids) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false || v === null || v === undefined) continue;
-    if (k === 'class') el.className = v;
-    else if (k === 'text') el.textContent = v;
-    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v === true ? '' : v);
-  }
-  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid);
-  return el;
-}
-const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text: name });
 
 /**
  * api: {
@@ -27,10 +15,11 @@ const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text
  *   renameSong(), newSong(), openEntries(close), save(), exportSong(), exportWav(),
  *   duplicateScene(), clearScene(), canDuplicateScene(),
  *   zoom: { min, max, get(), set(v) }, master: { get(), set(pos), text() },
- *   fullscreen: { supported(), active(), toggle() }, install: { available(), run() },
+ *   install: { available(), run() },
  * }
  */
 export function setupPhone(api) {
+  const fullscreen = fullscreenControls();
   const frame = createPhoneFrame({
     app: 'polytoggle',
     menuAria: 'Menu: song, files, scenes and view',
@@ -39,9 +28,9 @@ export function setupPhone(api) {
       { id: 'erase', icon: 'ink_eraser', label: 'Erase', onClick: () => api.erase() },
       { id: 'undo', icon: 'undo', label: 'Undo', onClick: () => api.undo() },
       { id: 'redo', icon: 'redo', label: 'Redo', onClick: () => api.redo() },
-    ],
+      fullscreen.tool,
+    ].filter(Boolean),
   });
-  buildRotateScreen({ app: 'polytoggle' });
 
   // ---- Add a lane ----
   const count = h('span', { class: 'pt-drawer__count' });
@@ -85,11 +74,6 @@ export function setupPhone(api) {
   masterRange.addEventListener('input', () => api.master.set(Number(masterRange.value)));
   masterRange.addEventListener('change', () => api.master.done());
 
-  // Full screen hides the browser's bars where the browser allows it (Android); iPhone Safari can't, so
-  // there the item is left out and Add to Home Screen is the way to a full screen.
-  const fsItem = api.fullscreen.supported()
-    ? menuItem({ icon: 'fullscreen', label: 'Full screen', hint: 'off', attrs: { 'aria-pressed': 'false' }, onClick: () => { api.fullscreen.toggle(); frame.close(); } })
-    : null;
   const installItem = menuItem({ icon: 'add_to_home_screen', label: 'Add to Home Screen', hint: 'full screen', onClick: () => { frame.close(); api.install.run(); } });
 
   const helpDialog = buildHelp();
@@ -109,7 +93,7 @@ export function setupPhone(api) {
       zoomRange,
       h('button', { class: 'pt-mrow__step', type: 'button', 'aria-label': 'Zoom in', text: '+', onclick: () => { api.zoom.set(api.zoom.get() + 8); render(); } })),
     h('div', { class: 'pt-mrow pt-mrow--master' }, h('span', { class: 'pt-mrow__label', text: 'Master volume', 'aria-hidden': 'true' }), masterRange, masterOut),
-    ...[fsItem, installItem].filter(Boolean),
+    ...[fullscreen.row, installItem].filter(Boolean),
     menuItem({ icon: 'help', label: 'How polytoggle works', onClick: () => { frame.close(); helpDialog.showModal(); helpDialog.querySelector('button').focus(); }, attrs: { class: 'pr-mi pt-mi--help' } }),
     menuFooter('polytoggle'),
   );
@@ -145,12 +129,6 @@ export function setupPhone(api) {
     if (document.activeElement !== masterRange) masterRange.value = String(api.master.get());
     masterOut.textContent = api.master.text();
     installItem.hidden = !api.install.available();
-    if (fsItem) {
-      const on = api.fullscreen.active();
-      fsItem.setAttribute('aria-pressed', String(on));
-      fsItem.querySelector('.pr-mi__hint').textContent = on ? 'on' : 'off';
-      fsItem.querySelector('.pr-icon').textContent = on ? 'fullscreen_exit' : 'fullscreen';
-    }
     masterRange.setAttribute('aria-valuetext', api.master.text());
   }
 

@@ -1,7 +1,7 @@
 // clock.js: timing shared by all three apps.
 //
 // Sound is booked on the audio clock (AudioContext.currentTime) by a lookahead scheduler:
-// a timer wakes about every 25 ms and books the next ~100 ms of events. The screen follows
+// a timer wakes about every 40 ms and books the next ~150 ms of events (a budget phone's busy main thread can stall for 100 ms). The screen follows
 // the audio: once per frame, read the audio clock and move the playheads.
 // See https://web.dev/articles/audio-scheduling
 //
@@ -60,11 +60,11 @@ export function createPulse({ period, origin = 0 }) {
  * @param {object} o
  * @param {() => number} o.getTime          the audio clock, in seconds
  * @param {(from: number, to: number) => void} o.onWindow  book every event in [from, to)
- * @param {number} [o.lookahead=0.1]        seconds booked ahead
- * @param {number} [o.interval=0.025]       seconds between wake-ups
+ * @param {number} [o.lookahead=0.15]        seconds booked ahead
+ * @param {number} [o.interval=0.04]       seconds between wake-ups
  * @param {{start(fn: () => void, ms: number): any, stop(handle: any): void}} [o.timer]
  */
-export function createScheduler({ getTime, onWindow, lookahead = 0.1, interval = 0.025, timer = defaultTimer() }) {
+export function createScheduler({ getTime, onWindow, lookahead = 0.15, interval = 0.04, timer = defaultTimer() }) {
   let cursor = 0;
   let handle = null;
   let late = 0;
@@ -138,7 +138,7 @@ export function getAudioContext() {
   if (!sharedContext) {
     // iOS: play through the silent switch, like a music app.
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* not supported */ }
-    sharedContext = new AudioContext({ latencyHint: 'interactive' });
+    sharedContext = new AudioContext({ latencyHint: 'balanced' });
   }
   return sharedContext;
 }

@@ -10,7 +10,7 @@ export const canFullscreen = () =>
 
 export const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 
-/** Hide the browser's own bars. Resolves true if the page is now full screen. Also asks for landscape, where allowed. */
+/** Hide the browser's own bars. Resolves true if the page is now full screen. */
 export async function enterFullscreen() {
   if (!canFullscreen()) return false;
   if (isFullscreen()) return true;
@@ -21,12 +21,10 @@ export async function enterFullscreen() {
   } catch {
     return false;
   }
-  try { await screen.orientation?.lock?.('landscape'); } catch { /* only some browsers allow it; the rotate screen covers the rest */ }
   return isFullscreen();
 }
 
 export function exitFullscreen() {
-  try { screen.orientation?.unlock?.(); } catch { /* ignore */ }
   try { (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document); } catch { /* ignore */ }
 }
 

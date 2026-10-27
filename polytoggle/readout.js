@@ -85,7 +85,7 @@ export function stepPitch(cents, tuningId, dir) {
   return (k * 1200) / divisions;
 }
 
-/** The step text in 19, 24 and 31-EDO, e.g. "step 7 of 19"; '' otherwise. */
+/** The step text in every EDO but 12, e.g. "step 7 of 19"; '' otherwise. */
 export function stepText(cents, tuningId) {
   const { divisions } = getTuning(tuningId);
   if (!divisions || divisions === 12) return '';

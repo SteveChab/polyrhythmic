@@ -1,11 +1,14 @@
 // phone.js: the phone frame shared by the three apps (site-spec, Phones): a left rail with Poly,
 // the app's tools and Menu; drawers that slide over the stage from the rail; the Menu's footer
-// links; and the "Turn your phone sideways" screen. phone-mode.js (in <head>) decides when the
+// links. Landscape gets a left rail; upright (Oct 27) the same buttons become a bottom bar. phone-mode.js (in <head>) decides when the
 // phone layout applies by setting html.is-phone. Everything here is built once and hidden by CSS
 // on larger screens, so switching layouts never rebuilds the app.
 
 import { menuLinksHTML } from './footer.js';
 import { wireBugLinks, wireSpeakingLink } from './site.js';
+import { isStandalone } from './install.js';
+import { canFullscreen, isFullscreen, enterFullscreen, exitFullscreen, onFullscreenChange } from './fullscreen.js';
+import { h, icon } from './ui.js';
 
 export const isPhone = () => document.documentElement.classList.contains('is-phone');
 
@@ -14,22 +17,8 @@ export function onPhoneChange(fn) {
   addEventListener('phonechange', () => fn(isPhone()));
 }
 
-function h(tag, attrs = {}, ...kids) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false || v === null || v === undefined) continue;
-    if (k === 'class') el.className = v;
-    else if (k === 'text') el.textContent = v;
-    else if (k === 'html') el.innerHTML = v;
-    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v === true ? '' : v);
-  }
-  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid);
-  return el;
-}
-const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text: name });
 
-/** A copy of the page's Poly (the pixel SVG in the app's logo), for the rail and the rotate screen. */
+/** A copy of the page's Poly (the pixel SVG in the app's logo), for the header's Poly in the upright layout. */
 function polyCopy() {
   const poly = document.querySelector('.pr-logo .poly');
   return poly ? poly.cloneNode(true) : h('span');
@@ -137,32 +126,24 @@ export function menuFooter(app, root = '../') {
 }
 
 /**
- * The "Turn your phone sideways" screen (site-spec, Phones). The apps are landscape only, and
- * iOS Safari can't lock the orientation, so an upright phone shows this over the app. The app stays
- * underneath (inert), and picks up when the phone turns.
+ * Full screen, twice (site-spec, Phones): a rail / bottom-bar tool and a Menu row. Only on a user's tap, never
+ * automatically; both hide where there's no Fullscreen API (iPhone Safari) or the app already runs from the Home Screen.
+ * Returns { tool, row }: pass `tool` in createPhoneFrame's tools and put `row` in the Menu (both null when unsupported).
  */
-const KEPT = { polytoggle: 'song', polycolor: 'palette', polygrid: 'grid' };
-
-export function buildRotateScreen({ app, root = '../' }) {
-  const wordmark = document.querySelector('.pr-logo .wordmark, .pr-logo .t-wordmark');
-  const screen = h('div', { class: 'pr-rotate', role: 'region', 'aria-label': 'Turn your phone sideways' },
-    h('a', { class: 'pr-rotate__brand', href: root, 'aria-label': `${app}, go to polyrhythmic.design home` }, polyCopy(), wordmark ? wordmark.cloneNode(true) : app),
-    h('div', { class: 'pr-rotate__main' },
-      h('span', { class: 'pr-icon pr-rotate__icon', 'aria-hidden': 'true', text: 'screen_rotation' }),
-      h('h1', { class: 'pr-rotate__title', text: 'Turn your phone sideways' }),
-      h('p', { class: 'pr-rotate__text', text: `${app} needs the width. Hold your phone sideways and your ${KEPT[app] ?? 'work'} is right where you left it.` }),
-      h('p', { class: 'pr-rotate__tip', text: 'Screen won’t turn? Rotation lock may be on. Swipe down from the top right corner and tap the lock.' })),
-    h('a', { class: 'pr-rotate__back underline-strong', href: root, text: 'Back to polyrhythmic.design' }));
-  document.body.append(screen);
-
-  // While it shows, everything else is inert, so a screen reader or a keyboard can't wander into the app beneath.
-  const portrait = matchMedia('(orientation: portrait)');
+export function fullscreenControls() {
+  if (!canFullscreen() || isStandalone()) return { tool: null, row: null };
+  const toggle = () => (isFullscreen() ? exitFullscreen() : enterFullscreen()); // straight from the tap: entering needs its user gesture
+  const row = menuItem({ icon: 'fullscreen', label: 'Full screen', hint: 'off', attrs: { 'aria-pressed': 'false' }, onClick: toggle });
   const sync = () => {
-    const on = isPhone() && portrait.matches;
-    for (const el of document.body.children) if (el !== screen && el.tagName !== 'SCRIPT') el.inert = on;
+    const on = isFullscreen();
+    const btn = document.getElementById('rail-full');
+    for (const el of [btn, row]) {
+      el.setAttribute('aria-pressed', String(on));
+      el.querySelector('.pr-icon').textContent = on ? 'fullscreen_exit' : 'fullscreen';
+    }
+    btn.querySelector('.pr-railbtn__label').textContent = on ? 'Exit' : 'Full';
+    row.querySelector('.pr-mi__hint').textContent = on ? 'on' : 'off';
   };
-  portrait.addEventListener?.('change', sync);
-  onPhoneChange(sync);
-  sync();
-  return screen;
+  onFullscreenChange(sync);
+  return { tool: { id: 'full', icon: 'fullscreen', label: 'Full', aria: 'Full screen', onClick: toggle }, row };
 }

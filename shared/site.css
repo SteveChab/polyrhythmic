@@ -136,9 +136,9 @@ img, svg { display: block; }
 
 /* ---------- Phones: the shared frame (site-spec, Phones; shared/phone.js) ----------
    phone-mode.js sets html.is-phone on a touch screen whose shorter side is 500px or less.
-   Apps are landscape only: a left rail, one top bar, the stage, and drawers from the rail.
+   Landscape: a left rail, one top bar, the stage, and drawers from the rail. Upright: see the block below.
    Backgrounds may run under the safe-area insets; controls never do. */
-:root:not(.is-phone) .pr-phone-only, .pr-phone-rail, .pr-drawer, .pr-rotate { display: none !important; }
+:root:not(.is-phone) .pr-phone-only, .pr-phone-rail, .pr-drawer { display: none !important; }
 .is-phone .pr-desk-only { display: none !important; }
 
 .is-phone .pr-app {
@@ -149,7 +149,7 @@ img, svg { display: block; }
 .is-phone .pr-app > .pr-foot { display: none; }
 .is-phone .pr-app > .pr-topbar {
   grid-column: 2; grid-row: 1; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: var(--space-8);
-  height: 58px; min-width: 0; padding: 0 var(--space-8) 0 var(--space-10); overflow: hidden;
+  height: 58px; min-width: 0; padding: 0 var(--space-16) 0 var(--space-10); overflow: hidden; /* right side doubled for curved screens; the safe-area inset is on .pr-app */
 }
 .is-phone .pr-app > .pr-topbar .pr-logo { display: none; }
 
@@ -216,25 +216,6 @@ img, svg { display: block; }
 .pr-mfoot .foot-base { padding-top: var(--space-8); line-height: 1.8; color: var(--muted); }
 .pr-mfoot .pr-icon--ext { font-size: 14px; }
 
-/* "Turn your phone sideways": the apps are landscape only. */
-@media (orientation: portrait) { .is-phone .pr-rotate { display: flex !important; } }
-.pr-rotate {
-  position: fixed; inset: 0; z-index: 100; flex-direction: column; background: var(--paper); color: var(--ink);
-  padding: max(var(--space-24), env(safe-area-inset-top)) var(--space-24) max(var(--space-24), env(safe-area-inset-bottom));
-}
-.pr-rotate__brand {
-  display: flex; align-items: center; gap: var(--space-10); min-height: var(--size-target); padding-bottom: var(--space-12);
-  border-bottom: var(--stroke-rule) solid var(--ink); color: var(--ink); text-decoration: none;
-}
-.pr-rotate__brand .poly { width: 34px; height: 34px; }
-.pr-rotate__main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
-.pr-rotate__icon { font-size: 96px; font-weight: 300; }
-.pr-rotate__title { margin: 0; font: 700 30px/1.1 var(--font-sans); }
-.pr-rotate__text { margin: 0; font: 400 16px/1.55 var(--font-sans); }
-.pr-rotate__tip { margin: 0; font: 400 14px/1.55 var(--font-sans); color: var(--muted); }
-.pr-rotate__back { align-self: flex-start; font: 600 15px/44px var(--font-sans); }
-.pr-mfoot .foot-base { font-size: 11px; }
-.pr-mfoot .foot-base .pr-icon--ext { display: none; }
 /* Short landscape screens (Safari's own bars can leave under 300px): the rail tightens so Menu stays in view. */
 @media (max-height: 340px) {
   .is-phone .pr-phone-rail { gap: 0; padding: 2px 0; }
@@ -261,4 +242,31 @@ img, svg { display: block; }
   .site-nav a { display: flex; height: 52px; padding: 0 var(--space-16); border: 0; font: 700 16px/1 var(--font-mono); }
   .site-nav a[href$="about/"] { font-weight: 500; }
   .site-nav a:focus-visible { outline-offset: -3px; }
+}
+
+/* ---------- Phones, upright (site-spec, Phones: Upright frame) ----------
+   A two-row header (Poly shows again), the stage, and the rail turned into a bottom bar.
+   Each app fills the header's two rows; the rail's buttons keep their order, Poly leaves for the header. */
+@media (orientation: portrait) {
+  .is-phone .pr-app {
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) calc(var(--size-bar, 56px) + 0px);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  }
+  .is-phone .pr-app > .pr-topbar { grid-column: 1; grid-row: 1; height: auto; flex-wrap: wrap; overflow: visible; padding: 0 var(--space-12); }
+  .is-phone .pr-app > .pr-topbar .pr-logo { display: flex; }
+  .is-phone .pr-app > .pr-topbar .pr-logo > :not(.poly) { display: none; } /* Poly alone; the wordmark waits for landscape and desktop */
+  .is-phone .pr-app { overflow-x: hidden; }
+  .is-phone .pr-app > main, .is-phone .pr-app > .pr-stage { grid-column: 1; grid-row: 2; }
+  .is-phone .pr-phone-rail {
+    grid-column: 1; grid-row: 3; flex-direction: row; align-items: stretch; gap: 0; padding: 0 0 env(safe-area-inset-bottom);
+    height: calc(56px + env(safe-area-inset-bottom)); box-sizing: border-box; overflow: hidden;
+    border-right: 0; border-top: var(--stroke-rule) solid var(--ink);
+  }
+  .is-phone .pr-railhome, .is-phone .pr-phone-rail__spacer { display: none; }
+  .is-phone .pr-railbtn { flex: 1 1 0; width: auto; min-width: 44px; height: 56px; }
+  .is-phone .pr-drawer:not([hidden]) {
+    top: env(safe-area-inset-top); bottom: calc(56px + env(safe-area-inset-bottom)); left: 0; right: 0; width: auto; max-width: none;
+    border-right: 0; border-bottom: var(--stroke-rule) solid var(--ink); box-shadow: none;
+  }
+  .is-phone .pr-drawer--wide:not([hidden]) { width: auto; }
 }

@@ -3,7 +3,7 @@
 .pc-group { display: flex; align-items: center; gap: var(--space-8); }
 .pc-master { width: 88px; }
 .pc-select { height: var(--size-control); }
-.pc-chord { min-width: 148px; }
+.pr-topbar .pr-toggle { border: 0; } /* no vertical rules around the switch (site-spec, The shared header) */
 .pr-switch:disabled { opacity: 0.4; cursor: not-allowed; }
 .pr-toggle__label.is-disabled { color: var(--off) !important; }
 
@@ -93,7 +93,6 @@
 /* ---------- Phones (spec, Layout: Phones): rail | top bar over the wheel and the swatch list ---------- */
 .is-phone .pr-topbar__row { display: contents; }
 .is-phone .pr-topbar :is(.pr-btngroup, .pc-group, #export) { display: none; }
-.is-phone .pc-chord { flex: none; min-width: 0; height: var(--size-target); padding: 0 14px 0 8px; font-size: 14px; font-weight: 600; }
 .is-phone .pr-topbar .pr-inline { flex: none; gap: 0; font-size: 0; }
 .is-phone .pc-select { height: var(--size-target); padding: 0 var(--space-8); font-size: 16px; } /* 16px, or iOS zooms in on focus */
 .is-phone .pr-toggle { flex: none; height: var(--size-target); gap: var(--space-8); padding: 0 var(--space-10); }
@@ -182,3 +181,30 @@
 .pc-mspace { height: var(--space-12); }
 .pc-mrow { display: grid; grid-template-columns: 118px minmax(0, 1fr); align-items: center; min-height: 48px; padding: 0 var(--space-16) 0 var(--space-20); font: 500 14px/1 var(--font-sans); }
 .pc-mrow .pr-range { width: 100%; }
+
+/* ---------- Phones, upright (spec, Layout: Phones, Upright): a two-row header, the wheel on top, the master sliders,
+   then the swatch list, which scrolls. A swatch open shrinks the wheel so the details fit under it. ---------- */
+@media (orientation: portrait) {
+  .is-phone .pr-app > .pr-topbar { display: grid; grid-template-columns: 34px 44px minmax(0, 1fr); column-gap: var(--space-8); align-items: center; padding-bottom: var(--space-6); min-width: 0; }
+  .is-phone .pr-topbar .pr-logo { grid-area: 1 / 1; height: 56px; border: 0; padding: 0; }
+  .is-phone .pr-topbar .pc-chord { grid-area: 1 / 2; }
+  .is-phone .pr-topbar .pr-toggle { grid-area: 1 / 3; justify-self: end; }
+  .is-phone .pr-topbar .pr-inline { grid-area: 2 / 1 / 3 / 3; justify-self: start; font-size: 0; }
+  .is-phone .pr-topbar .pc-count-top { grid-area: 2 / 3; justify-self: end; }
+
+  .is-phone .pc-main { grid-column: 1; grid-row: 2; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); }
+  .is-phone .pc-wheel { grid-column: 1; grid-row: 1; width: min(340px, calc(100vw - 2 * var(--space-12)), 40dvh); margin: var(--space-4) 0; }
+  .is-phone .pc-masters { grid-column: 1; grid-row: 2; border-left: 0; border-bottom: 0; border-top: var(--stroke-rule) solid var(--ink); }
+  .is-phone .pc-right { grid-column: 1; grid-row: 3; border-left: 0; border-top: var(--stroke-rule) solid var(--ink); }
+  .is-phone .pc-main.has-open .pc-right { grid-row: 2 / -1; }
+}
+
+/* An open swatch, upright: its actions sit right under the header, and Saturation and Lightness sit side by side first. */
+@media (orientation: portrait) {
+  .is-phone .pr-swcard.is-open { display: flex; flex-direction: column; }
+  .is-phone .pr-swcard.is-open > .pc-acts { order: 1; border-top: 0; border-bottom: var(--stroke-hair) solid var(--ink); }
+  .is-phone .pr-swcard.is-open > .pr-swcard__body { order: 2; }
+  .is-phone .pr-swcard__fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--space-16); }
+  .is-phone .pr-swcard.is-open .pr-swcard__fields > * { grid-column: 1 / -1 !important; }
+  .is-phone .pr-swcard.is-open .pr-swcard__fields > .pc-wide { grid-column: auto !important; grid-row: 1; }
+}

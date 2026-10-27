@@ -1,5 +1,21 @@
 // ui.js: shared controls. No audio here; apps pass callbacks.
 
+/** Build an element: h('button', { class, text, html, onclick, 'aria-label': ... }, ...children). false, null and undefined are skipped. */
+export function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v === null || v === undefined) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid);
+  return el;
+}
+export const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text: name });
+
 const TEXT_INPUT_TYPES = new Set(['', 'text', 'search', 'email', 'url', 'tel', 'password', 'number', 'date', 'time', 'datetime-local', 'month', 'week']);
 
 /** True when the element takes typed text (so Space must type a space): text-like inputs, textareas, selects, contenteditable. */
@@ -61,12 +77,3 @@ export function bindPlayPause(button, { onPlay, onPause, labels = ['Play', 'Paus
   };
 }
 
-/** Wire a .pr-switch (role="switch"). Returns a setter. */
-export function bindSwitch(button, onChange) {
-  const get = () => button.getAttribute('aria-checked') === 'true';
-  button.addEventListener('click', () => {
-    button.setAttribute('aria-checked', String(!get()));
-    onChange?.(get());
-  });
-  return { get checked() { return get(); }, set(v) { button.setAttribute('aria-checked', String(!!v)); } };
-}

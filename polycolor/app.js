@@ -7,29 +7,16 @@ import { TUNINGS, getTuning } from '../shared/tuning.js';
 import { rgbToHsl, hslToRgb } from '../shared/color.js';
 import { unlockAudio } from '../shared/clock.js';
 import { lightnessToDb } from '../shared/color.js';
-import { bindSpace } from '../shared/ui.js';
+import { bindSpace, h, icon } from '../shared/ui.js';
 import { createHistory } from '../shared/history.js';
 import { createConfirmOnce } from '../shared/confirm-once.js';
 import { bindShortcuts } from '../shared/shortcuts.js';
-import { isPhone, onPhoneChange, createPhoneFrame, buildRotateScreen, menuItem, menuFooter } from '../shared/phone.js';
+import { isPhone, onPhoneChange, createPhoneFrame, menuItem, menuFooter, fullscreenControls } from '../shared/phone.js';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'polycolor:state';
 const MINUS = '−';
 
-function h(tag, attrs = {}, ...kids) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false || v === null || v === undefined) continue;
-    if (k === 'class') el.className = v;
-    else if (k === 'text') el.textContent = v;
-    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v === true ? '' : v);
-  }
-  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid);
-  return el;
-}
-const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text: name });
 
 // ---------- State ----------
 
@@ -849,6 +836,7 @@ $('export').addEventListener('click', exportCard);
 // ---------- Phones (spec, Layout: Phones) ----------
 // The rail (Add, Undo, Redo, Menu), the Add drawer holding the add-by-value form, and the Menu.
 
+const fullscreen = fullscreenControls();
 const phone = createPhoneFrame({
   app: 'polycolor',
   menuAria: 'Menu: palette, export and sound',
@@ -856,9 +844,9 @@ const phone = createPhoneFrame({
     { id: 'add', icon: 'add_box', label: 'Add', aria: 'Add colors by value' },
     { id: 'undo', icon: 'undo', label: 'Undo', onClick: () => undo() },
     { id: 'redo', icon: 'redo', label: 'Redo', onClick: () => redo() },
-  ],
+    fullscreen.tool,
+  ].filter(Boolean),
 });
-buildRotateScreen({ app: 'polycolor' });
 const addDrawer = phone.drawer('add', { label: 'Add colors by value' });
 const menu = phone.drawer('menu', { label: 'Menu', title: 'polycolor', wide: true });
 const phoneVolume = h('input', { class: 'pr-range', type: 'range', min: '0', max: '100', step: '1', 'aria-label': 'Master volume' });
@@ -870,6 +858,7 @@ menu.body.append(
   menuItem({ icon: 'add_box', label: 'Add colors by value', onClick: () => phone.open('add') }),
   menuItem({ icon: 'restart_alt', label: 'New palette', onClick: run(() => $('new').click()) }),
   h('label', { class: 'pc-mrow' }, h('span', { text: 'Master volume' }), phoneVolume),
+  fullscreen.row,
   menuFooter('polycolor'),
 );
 addEventListener('drawerchange', (e) => {

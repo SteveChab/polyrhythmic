@@ -116,6 +116,7 @@ export function driveCurve(k, n = 1024) {
   return c;
 }
 
+const MAX_VOICES = 48; // a budget phone drops audio before it drops frames; past this, new notes are skipped
 const SAFETY = 0.5; // per-voice headroom: eight lanes can land together
 
 function makeNoiseBuffer(ctx, seconds = 2) {
@@ -126,7 +127,8 @@ function makeNoiseBuffer(ctx, seconds = 2) {
   return buf;
 }
 
-export function createSound(ctx) {
+/** `maxVoices` is the live-voice budget; an offline render books the whole file at once, so it passes Infinity. */
+export function createSound(ctx, { maxVoices = MAX_VOICES } = {}) {
   const limiter = ctx.createDynamicsCompressor(); // a safety limiter
   limiter.threshold.value = -3; limiter.knee.value = 3; limiter.ratio.value = 20;
   limiter.attack.value = 0.001; limiter.release.value = 0.1;
@@ -156,7 +158,7 @@ export function createSound(ctx) {
     const hz = centsToHz(p.cents);
     const { tone: toneGain, noise: noiseGain } = toneNoiseGains(p.noisePct);
     const peak = noteGain(p.volumeDb) * SAFETY * (def.level ?? 1);
-    if (peak <= 0) return;
+    if (peak <= 0 || live.size >= maxVoices) return;
     const { start } = p;
     const pts = adsrPoints(p.envelope, peak, p.dur);
     const end = start + pts[pts.length - 1].t;

@@ -362,3 +362,54 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 /* Tuning in a quarter-width cell: the menu arrow moves up beside the label so "12-EDO" fits. */
 .is-phone .pt-param__select { padding-right: 0; background-image: none; }
 .is-phone .pt-param:has(.pt-param__select) .pt-param__label::after { content: " \25BE"; }
+
+/* ---------- Phones, upright: the rings view (spec, Phones: Upright). The grid and its settings wait for landscape. ---------- */
+.pt-rings { display: none; }
+@media (orientation: portrait) {
+  .is-phone .pr-app > .pr-topbar { display: grid; grid-template-columns: 34px 44px 44px minmax(0, 1fr); column-gap: var(--space-8); align-items: center; padding-bottom: var(--space-6); }
+  .is-phone .pr-topbar .pr-logo { grid-area: 1 / 1; height: 56px; border: 0; padding: 0; }
+  .is-phone .pr-topbar #play { grid-area: 1 / 2; }
+  .is-phone .pr-topbar #restart { grid-area: 1 / 3; }
+  .is-phone .pr-topbar .pr-toggle { grid-area: 1 / 4; justify-self: end; border: 0; }
+  .is-phone .pr-topbar .pr-scenes { grid-area: 2 / 1 / 3 / -1; justify-self: start; }
+  .is-phone .pr-topbar .pr-inline[data-info="bpm"] { grid-area: 2 / 4; justify-self: end; margin-left: 0; }
+  .is-phone .pr-topbar .pr-toggle { gap: 6px; padding: 0 0 0 var(--space-6); }
+  .is-phone .pr-topbar .pr-toggle__label { font-size: 11px; }
+  .is-phone .pt-body { display: none; }
+  .is-phone .pt-rings {
+    display: flex; flex-direction: column; align-items: center; grid-column: 1; grid-row: 2; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--space-12) var(--space-16) var(--space-16);
+  }
+}
+.pt-rings__fig { flex: none; width: min(300px, 100%); aspect-ratio: 1; }
+.pt-ring__cell { stroke: var(--ink); stroke-width: 1; }
+.pt-ring__cell.is-now { stroke-width: 3; }
+.pt-ring__marker, .pt-ring__hand { stroke: var(--ink); stroke-width: 4; stroke-linecap: butt; }
+.pt-ring__hand { stroke-width: 3; }
+.is-muted .pt-ring__cell { stroke-dasharray: 3 2; }
+.pt-ring__center { font: 700 40px/1 var(--font-mono); fill: var(--ink); }
+.pt-ring__of { font: 500 12px/1 var(--font-mono); fill: var(--muted); }
+.pt-rings__loop { margin: var(--space-8) 0 0; font: 500 12px/1.3 var(--font-mono); text-align: center; }
+.pt-rings__turn { margin: var(--space-4) 0 var(--space-8); display: flex; align-items: center; gap: var(--space-6); font: 400 12px/1.3 var(--font-mono); color: var(--muted); }
+.pt-rings__turn .pr-icon { font-size: 18px; }
+.pt-rings__lanes { align-self: stretch; margin: 0; padding: 0; list-style: none; border-top: var(--stroke-hair) solid var(--divider); }
+.pt-ringrow { display: flex; align-items: center; gap: var(--space-4); min-height: 56px; border-bottom: var(--stroke-hair) solid var(--divider); }
+.pt-ringrow.is-muted .pt-ringrow__text { color: var(--muted); }
+.pt-ringrow__main { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-12); min-height: 56px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.pt-ringrow__main[aria-current="true"] { box-shadow: inset 4px 0 0 var(--ink); padding-left: var(--space-12); }
+.pt-ringrow__main .pr-swatch { flex: none; width: 24px; height: 24px; }
+.pt-ringrow__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.pt-ringrow__text strong { font: 700 14px/1 var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-ringrow__text span { font: 400 10px/1 var(--font-mono); letter-spacing: 0.06em; color: var(--muted); }
+.pt-ringrow__btn { width: var(--size-target); height: var(--size-target); }
+.pt-ringrow__btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+.pt-ring__cell { cursor: pointer; }
+.is-selected .pt-ring__cell { stroke-width: 1.5; }
+.pt-pad { align-self: stretch; display: grid; grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr)); gap: var(--space-4); margin: var(--space-4) 0 var(--space-12); }
+.pt-pad[hidden] { display: none; }
+.pt-pad__beat {
+  height: 48px; padding: 0; border: var(--stroke-hair) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer;
+  font: 500 11px/1 var(--font-mono); display: flex; align-items: flex-start; justify-content: flex-start; padding: var(--space-4);
+}
+.pt-pad__beat.is-on { background: var(--note-bg); color: var(--note-fg); }

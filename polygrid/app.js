@@ -3,11 +3,11 @@
 import * as M from './model.js';
 import { createSound } from './sound.js';
 import { TUNINGS, getTuning } from '../shared/tuning.js';
-import { noteColor, rgbToHex, labelInk } from '../shared/color.js';
+import { noteColor, rgbToHex, labelInk, hexToRgb } from '../shared/color.js';
 import { getAudioContext, unlockAudio, heardTime, createFrameLoop } from '../shared/clock.js';
-import { bindPlayPause, bindSwitch } from '../shared/ui.js';
+import { bindPlayPause } from '../shared/ui.js';
 import { bindShortcuts } from '../shared/shortcuts.js';
-import { isPhone, onPhoneChange, createPhoneFrame, buildRotateScreen, menuFooter } from '../shared/phone.js';
+import { isPhone, onPhoneChange, createPhoneFrame, menuFooter, menuItem, fullscreenControls } from '../shared/phone.js';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'polygrid:state';
@@ -34,7 +34,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) saveN
 
 const rawHz = () => M.sliderToHz(state.slider);
 const hz = () => M.effectiveHz(rawHz(), state.beats, { snap: snapActive(), tuning: state.tuning });
-const snapActive = () => state.snap && !!getTuning(state.tuning).divisions;
+const snapActive = () => false; // Snap to tuning is out of the spec (Oct 26); tuning only names the notes
 
 let sound = null; // made on the first Play, inside the click
 
@@ -45,9 +45,9 @@ $('tuning').innerHTML = TUNINGS.map((t) => `<option value="${t.id}">${t.label}</
 const scale = $('scale');
 for (const t of M.TICKS) {
   const left = M.hzToPercent(t.hz);
-  const tf = left === 0 ? 'none' : left === 100 ? 'translateX(-100%)' : 'translateX(-50%)';
+  const edge = left === 0 ? 'start' : left === 100 ? 'end' : 'mid';
   scale.insertAdjacentHTML('beforeend',
-    `<div class="pg-tick" style="left:${left}%"></div><div class="pg-tick__label" style="left:${left}%;transform:${tf}">${t.label}</div>`);
+    `<div class="pg-tick" style="--p:${left}%"></div><div class="pg-tick__label" data-edge="${edge}" style="--p:${left}%">${t.label}</div>`);
 }
 const fuseMarks = [0, 1, 2].map((r) => {
   const el = document.createElement('div');
@@ -67,7 +67,7 @@ const rows = [0, 1, 2].map((r) => {
   const head = document.createElement('div');
   head.className = 'pg-rowhead';
   head.innerHTML = `
-    <button class="pg-rowname pr-phone-only" type="button"><strong>${name}</strong><span>${TICK_NAMES[r]}</span></button>
+    <button class="pg-rowname pr-phone-only" type="button"><strong>${name}<b class="pg-rowname__n"></b></strong><span>${TICK_NAMES[r]}</span></button>
     <div class="pg-rowhead__top">
       <h3 class="pg-rowhead__name">${name}</h3><span class="pg-rowhead__tick">${TICK_NAMES[r]}</span>
       <button class="pr-dense pg-dense pg-mute" type="button" data-act="mute" aria-pressed="false" aria-label="Mute ${name}">M</button>
@@ -99,7 +99,7 @@ const rows = [0, 1, 2].map((r) => {
     cells: strip.querySelector('.pg-cells'), bar: strip.querySelector('.pg-under__bar'),
     bandNote: strip.querySelector('.pg-band__note'), bandHz: strip.querySelector('.pg-band__hz'),
     builtFor: -1, lastIndex: -1,
-    nameBtn: q('.pg-rowname'), volRow: q('.pg-rowhead__vol'),
+    nameBtn: q('.pg-rowname'), volRow: q('.pg-rowhead__vol'), countEl: q('.pg-rowname__n'),
   };
   row.nameBtn.addEventListener('click', () => openRowSheet(r));
 
@@ -199,7 +199,6 @@ document.addEventListener('pointerdown', (e) => {
 // ---------- Top bar controls ----------
 
 $('tuning').addEventListener('change', (e) => { state.tuning = e.target.value; changed(); });
-const snapSwitch = bindSwitch($('snap'), (on) => { state.snap = on; changed(); });
 $('master').addEventListener('input', (e) => { state.master = Number(e.target.value); changed(); });
 $('speed').addEventListener('input', (e) => { state.slider = Number(e.target.value); changed(); });
 
@@ -221,9 +220,6 @@ function render() {
   $('preset-name').textContent = preset ? preset.name : 'Custom';
   presetBtn.setAttribute('aria-label', `Preset: ${preset ? preset.name : 'Custom'}`);
   $('tuning').value = state.tuning;
-  snapSwitch.set(snapActive());
-  $('snap').disabled = !tuning.divisions;
-  $('snap-label').classList.toggle('is-disabled', !tuning.divisions);
   $('master').value = state.master;
 
   // Headline: the ratio, what it sounds like, and the grid it makes.
@@ -248,6 +244,7 @@ function render() {
     row.vol.value = state.db[r];
     row.vol.setAttribute('aria-valuetext', M.dbText(state.db[r]));
     row.db.textContent = M.dbText(state.db[r]);
+    row.countEl.textContent = n ? ` · ${n}` : ' · off';
     row.nameBtn.setAttribute('aria-label', `${M.ROW_NAMES[r]}, ${TICK_NAMES[r]}, volume ${M.dbText(state.db[r])}. Row settings`);
 
     if (row.builtFor !== n) {
@@ -265,8 +262,8 @@ function render() {
       const mix = c.rgb.map((v) => Math.round(255 + (v - 255) * t));
       const fill = mode === 'band' ? c.hex : rgbToHex(...mix);
       row.strip.style.setProperty('--fill', fill);
-      row.strip.style.setProperty('--fill-ink', labelInk(...hexRgb(fill)));
-      // The band carries what the Notes list used to: note, Hz, and in 19, 24 and 31-EDO the step and cents.
+      row.strip.style.setProperty('--fill-ink', labelInk(...hexToRgb(fill)));
+      // The band carries what the Notes list used to: note, Hz, and in every EDO but 12 the step and cents.
       const line = M.noteLine(n, cycleHz, { tuning: state.tuning, snapped: snapActive() && n === lowN });
       const parts = line.rest.split(' · ');
       row.bandNote.textContent = parts[1] ?? '';
@@ -294,7 +291,7 @@ function render() {
   $('speed').setAttribute('aria-valuetext', label);
   state.beats.forEach((n, r) => {
     fuseMarks[r].hidden = !n;
-    if (n) fuseMarks[r].style.left = `${M.hzToPercent(M.fuseHz(n))}%`;
+    if (n) fuseMarks[r].style.setProperty('--p', `${M.hzToPercent(M.fuseHz(n))}%`);
   });
 
   // The grid figure: the active rows as page columns, colorless, with the shared grid faint behind.
@@ -312,8 +309,6 @@ function render() {
 
   drawPlayheads(true);
 }
-
-function hexRgb(hex) { return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)); }
 
 // ---------- Sound ----------
 
@@ -335,8 +330,8 @@ function changed() {
 
 // ---------- Playheads: once per frame, read the audio clock ----------
 
-let stageWidth = 0;
-new ResizeObserver(([e]) => { stageWidth = e.contentRect.width; drawPlayheads(true); }).observe($('stage'));
+const portrait = matchMedia('(orientation: portrait)');
+const upright = () => isPhone() && portrait.matches;
 
 function currentPhase() {
   if (!sound) return 0;
@@ -356,14 +351,14 @@ function drawPlayheads(force = false) {
     const i = Math.floor(frac * n) % n;
     if (i !== row.lastIndex || force) {
       row.lastIndex = i;
-      row.bar.style.transform = `translateX(${i * 100}%)`;
+      row.bar.style.setProperty('--i', i);
     }
   });
 
   const sweep = $('sweep');
   const showSweep = !!sound?.playing && !reducedMotion.matches && cycleHz <= M.SWEEP_MAX_HZ && M.gridColumns(state.beats) > 0;
   sweep.hidden = !showSweep;
-  if (showSweep) $('sweep-line').style.transform = `translateX(${frac * stageWidth}px)`;
+  if (showSweep) $('sweep-line').style.transform = `translate${upright() ? 'Y' : 'X'}(${frac * 100}%)`; // the line fills the stage, so % is the stage
 }
 
 const frames = createFrameLoop({ getTime: () => 0, onFrame: () => drawPlayheads() });
@@ -385,19 +380,20 @@ bindPlayPause($('play'), {
 reducedMotion.addEventListener('change', () => drawPlayheads(true));
 
 // ---------- Phones (spec, Layout: Phones) ----------
-// The rail (Preset, Grid, Menu). The headline moves into the top bar; tuning, snap and master volume
+// The rail (Preset, Grid, Menu). The headline moves into the top bar; tuning and master volume
 // into the Menu; the grid callout into the Grid drawer; a row's Vol slider into its sheet. These are the
 // desktop's own elements, moved, so their wiring stays as it is.
 
+const fullscreen = fullscreenControls();
 const phone = createPhoneFrame({
   app: 'polygrid',
-  menuAria: 'Menu: tuning, snap and sound',
+  menuAria: 'Menu: tuning and sound',
   tools: [
     { id: 'preset', icon: 'library_music', label: 'Preset', aria: 'Presets' },
     { id: 'grid', icon: 'view_week', label: 'Grid', aria: 'The grid' },
-  ],
+    fullscreen.tool,
+  ].filter(Boolean),
 });
-buildRotateScreen({ app: 'polygrid' });
 const presetDrawer = phone.drawer('preset', { label: 'Presets' });
 const gridDrawer = phone.drawer('grid', { label: 'The grid', wide: true });
 gridDrawer.el.classList.add('pg-griddrawer');
@@ -407,7 +403,7 @@ const rowTick = document.createElement('p');
 rowTick.className = 'pg-sheet__tick';
 const menuSettings = document.createElement('div');
 menuSettings.className = 'pg-msettings';
-menuDrawer.body.append(menuSettings, menuFooter('polygrid'));
+menuDrawer.body.append(menuSettings, ...(fullscreen.row ? [fullscreen.row] : []), menuFooter('polygrid'));
 rowDrawer.body.append(rowTick);
 
 // Each moved element remembers where it came from, so the desktop gets it back in place.
@@ -422,10 +418,20 @@ function moveHome(el) {
 }
 const topbarRow = document.querySelector('.pr-topbar__row');
 const tuningLabel = $('tuning').closest('label');
-const snapGroup = $('snap').closest('.pg-group');
 const masterGroup = $('master').closest('.pg-group');
 const callout = document.querySelector('.pg-callout');
 const headline = document.querySelector('.pg-headline');
+
+// Upright, the row's M button has no room in its column head, so the sheet carries Mute instead.
+const muteItem = menuItem({ icon: 'volume_off', label: 'Mute', hint: 'off', attrs: { 'aria-pressed': 'false' }, onClick: () => { rows[sheetRow].mute.click(); syncMuteItem(); } });
+muteItem.classList.add('pg-sheet__mute');
+rowDrawer.body.append(muteItem);
+function syncMuteItem() {
+  if (sheetRow === null) return;
+  const on = state.mute[sheetRow];
+  muteItem.setAttribute('aria-pressed', String(on));
+  muteItem.querySelector('.pr-mi__hint').textContent = on ? 'on' : 'off';
+}
 
 let sheetRow = null;
 function openRowSheet(r) {
@@ -434,6 +440,7 @@ function openRowSheet(r) {
   rowDrawer.titleEl.textContent = M.ROW_NAMES[r];
   rowTick.textContent = TICK_NAMES[r];
   moveTo(rows[r].volRow, rowDrawer.body);
+  syncMuteItem();
   phone.open('row');
 }
 function closeRowSheet() {
@@ -448,23 +455,26 @@ addEventListener('drawerchange', (e) => {
 });
 menu.addEventListener('click', (e) => { if (isPhone() && e.target.closest('[role="menuitemradio"]')) phone.close(); });
 
-function placeForPhone(on) {
+function placeForPhone() {
+  const on = isPhone();
+  document.documentElement.classList.toggle('is-upright', upright());
   if (on) {
     moveTo(headline, topbarRow, $('play').nextSibling);
+    // The tuning menu only changes the notes' labels, so on a phone it lives in the Menu, not the header (Steve, Oct 27).
     moveTo(tuningLabel, menuSettings);
-    moveTo(snapGroup, menuSettings);
     moveTo(masterGroup, menuSettings);
     moveTo(menu, presetDrawer.body);
     moveTo(callout, gridDrawer.body);
   } else {
     closeRowSheet();
-    for (const el of [callout, menu, masterGroup, snapGroup, tuningLabel, headline]) moveHome(el); // last moved, first home
+    for (const el of [callout, menu, masterGroup, tuningLabel, headline]) moveHome(el); // last moved, first home
     menu.hidden = true;
   }
   render();
 }
 onPhoneChange(placeForPhone);
-if (isPhone()) placeForPhone(true);
+portrait.addEventListener('change', placeForPhone);
+if (isPhone()) placeForPhone();
 
 render();
 

@@ -4,6 +4,9 @@
 export const A4 = 440;
 
 export const TUNINGS = Object.freeze([
+  { id: '5-edo', label: '5-EDO', divisions: 5 },
+  { id: '7-edo', label: '7-EDO', divisions: 7 },
+  { id: '9-edo', label: '9-EDO', divisions: 9 },
   { id: '12-edo', label: '12-EDO', divisions: 12 },
   { id: '19-edo', label: '19-EDO', divisions: 19 },
   { id: '24-edo', label: '24-EDO', divisions: 24 },
@@ -27,10 +30,6 @@ export function getTuning(id) {
 /** Cents above (or below) A4. */
 export function centsFromA4(freq) {
   return 1200 * Math.log2(freq / A4);
-}
-
-export function frequencyFromCents(cents) {
-  return A4 * 2 ** (cents / 1200);
 }
 
 /** Frequency of step `k` in an N-EDO tuning, counted from A4 = step 0 (k may be negative or past N). */
@@ -83,7 +82,7 @@ export function name12(freq) {
 
 /**
  * Describe a pitch in a tuning, for readouts and labels.
- * In 12-EDO: "E2". In 19, 24 and 31-EDO: the nearest 12-EDO name plus cents, and "step k of N"
+ * In 12-EDO: "E2". In every other EDO (5, 7, 9, 19, 24, 31): the nearest 12-EDO name plus cents, and "step k of N"
  * (k counted from A4 = step 0, folded into 0..N-1 within the octave). In Free (Hz): the
  * frequency in Hz, with the nearest name plus cents as a second line.
  */

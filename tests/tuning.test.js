@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { TUNINGS, name12, describePitch, snap, centsOffTuning, formatCents, formatHz, stepFrequency } from '../shared/tuning.js';
 
 test('the shared list, 12-EDO first', () => {
-  assert.deepEqual(TUNINGS.map((t) => t.label), ['12-EDO', '19-EDO', '24-EDO', '31-EDO', 'Free (Hz)']);
+  assert.deepEqual(TUNINGS.map((t) => t.label), ['5-EDO', '7-EDO', '9-EDO', '12-EDO', '19-EDO', '24-EDO', '31-EDO', 'Free (Hz)']);
 });
 
 test('12-EDO names with scientific octaves', () => {
@@ -27,6 +27,20 @@ test('19-EDO: step k of N from A4 = step 0', () => {
   assert.equal(describePitch(440, '12-edo').stepText, undefined);
 });
 
+test('5, 7 and 9-EDO: step k of N, folded into the octave, A4 = step 0', () => {
+  for (const n of [5, 7, 9]) {
+    const id = `${n}-edo`;
+    assert.equal(describePitch(440, id).stepText, `step 0 of ${n}`);
+    assert.equal(describePitch(stepFrequency(1, n), id).stepText, `step 1 of ${n}`);
+    assert.equal(describePitch(stepFrequency(-1, n), id).stepText, `step ${n - 1} of ${n}`);
+    assert.equal(describePitch(stepFrequency(n, n), id).stepText, `step 0 of ${n}`);
+    assert.equal(describePitch(stepFrequency(n + 2, n), id).stepText, `step 2 of ${n}`);
+    assert.ok(Math.abs(centsOffTuning(stepFrequency(3, n), id)) < 1e-6);
+  }
+  // 5-EDO steps are 240¢: A4 + 240¢ is B4 + 40¢.
+  assert.equal(describePitch(stepFrequency(1, 5), '5-edo').text, 'B +40¢');
+});
+
 test('24-EDO quarter tone names as a 12-EDO note plus 50 cents', () => {
   const d = describePitch(stepFrequency(1, 24), '24-edo');
   assert.equal(d.text, 'A +50¢');
@@ -45,4 +59,14 @@ test('Hz formatting', () => {
   assert.equal(formatHz(440), '440 Hz');
   assert.equal(formatHz(27.5), '27.5 Hz');
   assert.equal(formatHz(1760), '1,760 Hz');
+});
+
+test('5, 7 and 9-EDO: step k of N, folded into the octave', () => {
+  for (const n of [5, 7, 9]) {
+    assert.equal(describePitch(stepFrequency(2, n), `${n}-edo`).stepText, `step 2 of ${n}`);
+    assert.equal(describePitch(stepFrequency(-1, n), `${n}-edo`).stepText, `step ${n - 1} of ${n}`);
+    assert.equal(describePitch(stepFrequency(n, n), `${n}-edo`).stepText, `step 0 of ${n}`);
+    assert.ok(Math.abs(describePitch(stepFrequency(3, n), `${n}-edo`).offTuning) < 1e-9);
+  }
+  assert.ok(Math.abs(snap(stepFrequency(1, 5) * 1.01, '5-edo') - stepFrequency(1, 5)) < 1e-9);
 });

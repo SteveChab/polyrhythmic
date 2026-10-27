@@ -10,33 +10,20 @@ import { createConfirmOnce } from '../shared/confirm-once.js';
 import { bindShortcuts } from '../shared/shortcuts.js';
 import * as store from './store.js';
 import * as R from './readout.js';
-import { encodeWav, MAX_EXPORT_SECONDS } from './wav.js';
+import { encodeWav, exportPlan, fadeOut, peakNormalize, wavFileName, wavInfo, LEAD_IN_SECONDS } from './wav.js';
 import { INFO, SHORTCUTS } from './info.js';
 import { TUNINGS, getTuning } from '../shared/tuning.js';
 import { noteColor } from '../shared/color.js';
 import { getAudioContext, unlockAudio, heardTime, createFrameLoop, createScheduler } from '../shared/clock.js';
-import { bindPlayPause } from '../shared/ui.js';
+import { bindPlayPause, h, icon } from '../shared/ui.js';
 import { isPhone, onPhoneChange } from '../shared/phone.js';
 import { setupPhone } from './phone.js';
-import { canFullscreen, isFullscreen, enterFullscreen, exitFullscreen, onFullscreenChange } from '../shared/fullscreen.js';
-import { canInstall, install, isIOS, isStandalone, onInstallChange } from '../shared/install.js';
+import { createRings, ringOrder, ringLabel } from './rings.js';
+import { canInstall, install, isIOS, onInstallChange } from '../shared/install.js';
 
 const $ = (id) => document.getElementById(id);
 
-function h(tag, attrs = {}, ...kids) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false || v === null || v === undefined) continue;
-    if (k === 'class') el.className = v;
-    else if (k === 'text') el.textContent = v;
-    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v === true ? '' : v);
-  }
-  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid);
-  return el;
-}
 
-const icon = (name) => h('span', { class: 'pr-icon', 'aria-hidden': 'true', text: name });
 const MINUS = '−';
 const dbText = (db) => (db <= S.DB_MIN ? `${MINUS}∞ dB` : db === 0 ? '0 dB' : `${MINUS}${Math.abs(Math.round(db * 10) / 10)} dB`);
 const { posToDb, dbToPos } = S;
@@ -434,6 +421,7 @@ function renderTop() {
   $('song-name').setAttribute('aria-label', `Song name: ${song.name}. Click to rename`);
   document.title = `${song.name} · polytoggle · polyrhythmic.design`;
   phone?.render();
+  renderRings();
 }
 
 // Up and down move whole BPM; typing still takes decimals (113.13).
@@ -630,27 +618,33 @@ $('export-wav').addEventListener('click', async () => {
     await ask({ title: 'Nothing to export', text: 'This scene has no notes yet.', ok: 'OK', cancel: null });
     return;
   }
-  const full = S.beatsToSeconds(beats, song.bpm);
-  const secs = Math.min(full, MAX_EXPORT_SECONDS);
+  const plan = exportPlan(S.beatsToSeconds(beats, song.bpm));
   const rate = 44100;
-  const tail = 1.5;
   const status = $('export-status');
   const fmt = (n) => `${Math.floor(n / 60)}:${String(Math.round(n % 60)).padStart(2, '0')}`;
-  status.textContent = `Rendering ${fmt(secs)} of audio…`;
+  status.textContent = `Rendering ${fmt(plan.totalSeconds)} of audio…`;
   $('export').disabled = true;
   await new Promise((r) => setTimeout(r, 30)); // let the message paint before the heavy work
   try {
-    const off = new OfflineAudioContext(2, Math.ceil((secs + tail) * rate), rate);
-    const snd = createSound(off);
+    const off = new OfflineAudioContext(2, Math.ceil(plan.totalSeconds * rate), rate);
+    const snd = createSound(off, { maxVoices: Infinity }); // the file is booked all at once, so the live-voice budget would drop every note after the first 48
     snd.setMaster(song.masterDb, true);
     for (const lane of song.lanes) snd.setLane(lane.id, settings(lane.id), true);
     const sq = createSequencer({ song, sceneIndex: scene });
     sq.play(0);
-    for (const e of sq.book(0, secs)) snd.play(e);
+    for (const e of sq.book(0, plan.bodySeconds)) snd.play({ ...e, time: e.time + LEAD_IN_SECONDS, endTime: e.endTime + LEAD_IN_SECONDS });
     const buf = await off.startRendering();
-    const file = store.fileNameFor(song).replace(/\.polytoggle$/, `-scene-${scene + 1}.wav`);
-    download(new Blob([encodeWav([buf.getChannelData(0), buf.getChannelData(1)], rate)], { type: 'audio/wav' }), file);
-    status.textContent = full > secs ? `Saved ${file}, cut at 10 minutes` : `Saved ${file}`;
+    const file = wavFileName(store.fileNameFor(song), scene + 1, sc().polytoggle, song.bpm);
+    const channels = [buf.getChannelData(0), buf.getChannelData(1)];
+    fadeOut(channels, rate);
+    peakNormalize(channels); // as loud as it can safely be, whatever the master and lane volumes were
+    const info = wavInfo({
+      songName: song.name, sceneNumber: scene + 1, mode: sc().polytoggle, bpm: song.bpm,
+      cycleSeconds: S.beatsToSeconds(beats, song.bpm), loops: plan.loops,
+      soloed: song.lanes.filter((l) => settings(l.id).solo).map((l) => l.name),
+    });
+    download(new Blob([encodeWav(channels, rate, info)], { type: 'audio/wav' }), file);
+    status.textContent = plan.cut ? `Saved ${file}, cut at 10 minutes` : `Saved ${file}`;
   } catch (err) {
     status.textContent = '';
     await ask({ title: 'Couldn’t export audio', text: 'This browser couldn’t render the scene.', ok: 'OK', cancel: null });
@@ -952,6 +946,7 @@ function focusCursor() {
 function drawHeads(force = false) {
   const t = ctx ? heardTime(ctx) : 0;
   const hs = hasPlayed ? seq.playheads(t) : null;
+  if (uprightRings()) rings.draw(hs, { reduced: reducedMotion.matches });
   for (const [id, { bar, cols }] of heads) {
     const p = hs?.find((x) => x.laneId === id);
     bar.hidden = !p;
@@ -1751,6 +1746,72 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// ---------- Rings (phones, upright) ----------
+
+const rings = createRings($('rings-fig'));
+let ringLane = null; // the lane whose beats show as tap pads under the rings
+
+/** Tap a beat: an empty one gets a note at the lane's pitch (and sounds); a filled one loses its note. */
+function toggleBeat(laneId, beat) {
+  const note = settings(laneId).notes.find((n) => beat >= n.beat && beat < n.beat + (n.length ?? 1));
+  if (!note) { addNoteAt(laneId, beat); return; }
+  history.seal();
+  commit(S.removeNote(song, scene, laneId, note.beat));
+  announce(`${laneAt(laneIdx(laneId)).name}, beat ${beat + 1}, removed`);
+}
+$('rings-fig').addEventListener('click', (e) => {
+  const c = e.target.closest?.('[data-lane]');
+  if (!c) return;
+  ringLane = c.dataset.lane;
+  toggleBeat(c.dataset.lane, Number(c.dataset.beat));
+});
+const portraitMq = matchMedia('(orientation: portrait)');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const uprightRings = () => isPhone() && portraitMq.matches;
+const instColor = (id) => { const i = S.INSTRUMENTS.find((x) => x.id === id); return i ? noteColor(S.centsToHz(i.cents), { saturation: 100 - i.noisePct }).hex : '#999'; };
+
+function renderRings() {
+  if (!uprightRings()) return;
+  const scn = sc();
+  const lanes = song.lanes.map((l) => {
+    const ls = scn.lanes[l.id];
+    return {
+      id: l.id, name: l.name, beats: ls.beats, muted: ls.mute, solo: ls.solo, color: instColor(l.instrument),
+      notes: ls.notes.map((n) => { const c = noteColor(S.centsToHz(n.cents), { saturation: 100 - n.noisePct, db: n.volumeDb }); return { beat: n.beat, length: n.length, hex: c.hex, fg: c.label }; }),
+    };
+  });
+  if (!lanes.some((l) => l.id === ringLane)) ringLane = ringOrder(lanes)[0]?.id ?? null;
+  rings.render(lanes, scn.polytoggle === 'polyrhythm', ringLane);
+  const cur = lanes.find((l) => l.id === ringLane);
+  $('rings-pad').hidden = !cur;
+  if (cur) {
+    $('rings-pad').style.setProperty('--cols', Math.ceil(cur.beats / Math.ceil(cur.beats / 8))); // at most 8 across, rows kept even
+    $('rings-pad').setAttribute('aria-label', `${cur.name}: ${cur.beats} beats. Tap a beat to add or remove a note`);
+    $('rings-pad').replaceChildren(...Array.from({ length: cur.beats }, (_, b) => {
+      const note = cur.notes.find((n) => b >= n.beat && b < n.beat + (n.length ?? 1));
+      return h('button', { class: `pt-pad__beat${note ? ' is-on' : ''}`, type: 'button', style: note ? `--note-bg:${note.hex};--note-fg:${note.fg}` : null,
+        'aria-pressed': String(!!note), 'aria-label': `${cur.name}, beat ${b + 1}${note ? ', note' : ', empty'}`, text: String(b + 1), onclick: () => toggleBeat(cur.id, b) });
+    }));
+  }
+  $('rings-loop').textContent = R.loopReadout(scn, song.bpm);
+  const ordered = ringOrder(lanes);
+  $('rings-lanes').replaceChildren(...ordered.map((l, k) => {
+    const row = h('li', { class: `pt-ringrow${l.muted ? ' is-muted' : ''}` },
+      h('button', { class: 'pt-ringrow__main', type: 'button', 'aria-label': eraseMode ? `Remove ${l.name}` : `${l.name}, ${ringLabel(k, ordered.length, l.beats)}. Show its beats`, 'aria-current': !eraseMode && l.id === ringLane ? 'true' : null,
+        onclick: () => { if (eraseMode) { sel = { lane: l.id, beat: null }; deleteSelectedLane(); } else { ringLane = l.id; renderRings(); } } },
+        h('span', { class: 'pr-swatch', style: `--swatch:${l.color}`, 'aria-hidden': 'true' }),
+        h('span', { class: 'pt-ringrow__text' }, h('strong', { text: l.name }), h('span', { text: ringLabel(k, ordered.length, l.beats).toUpperCase() })),
+        eraseMode ? h('span', { class: 'pr-icon', 'aria-hidden': 'true', text: 'delete' }) : null),
+      h('button', { class: 'pr-dense pt-ringrow__btn', type: 'button', 'aria-pressed': String(l.solo), 'aria-label': `Solo ${l.name}`, text: 'S', onclick: () => toggleLane(l.id, 'solo') }),
+      h('button', { class: 'pr-dense pt-ringrow__btn', type: 'button', 'aria-pressed': String(l.muted), 'aria-label': `Mute ${l.name}`, text: 'M', onclick: () => toggleLane(l.id, 'mute') }));
+    return row;
+  }));
+  rings.draw(null);
+  drawHeads(true);
+}
+portraitMq.addEventListener('change', () => { renderRings(); });
+reducedMotion.addEventListener('change', () => drawHeads(true));
+
 // ---------- Erase (phones) ----------
 
 /** Erase removes the selected note or lane; with nothing selected it toggles erase mode (spec, Phones). */
@@ -1817,16 +1878,6 @@ phone = setupPhone({
   clearScene: () => clearSceneAt(scene),
   canDuplicateScene: () => !S.sceneIsEmpty(sc()) && S.nextEmptyScene(song, scene) >= 0,
   zoom: { min: ZOOM_MIN, max: ZOOM_MAX, get: () => zoom, set: setZoom },
-  fullscreen: {
-    supported: () => canFullscreen() && !isStandalone(),
-    active: isFullscreen,
-    // Called straight from the tap: entering full screen needs the tap's user gesture.
-    toggle() {
-      const on = !isFullscreen();
-      setPref(store.KEYS.fullscreen, on ? 'on' : 'off');
-      if (on) enterFullscreen(); else exitFullscreen();
-    },
-  },
   install: {
     available: canInstall,
     run: () => install({
@@ -1846,16 +1897,6 @@ phone = setupPhone({
 });
 onPhoneChange(() => { eraseMode = false; renderTop(); renderStage(); renderPanel(); });
 
-// Phones held sideways: the first tap on the stage hides the browser's bars (Android; iPhone Safari can't).
-// Once per visit, and never once Full screen has been turned off in the Menu.
-function autoFullscreen(e) {
-  if (!isPhone() || !canFullscreen() || isFullscreen() || isStandalone() || pref(store.KEYS.fullscreen, 'on') === 'off') return;
-  if (!matchMedia('(orientation: landscape)').matches || !$('stage').contains(e.target)) return;
-  $('stage').removeEventListener('pointerup', autoFullscreen);
-  enterFullscreen();
-}
-$('stage').addEventListener('pointerup', autoFullscreen);
-onFullscreenChange(() => phone?.render());
 onInstallChange(() => phone?.render());
 
 renderInstruments();

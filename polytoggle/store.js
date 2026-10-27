@@ -11,7 +11,6 @@ export const KEYS = Object.freeze({
   zoom: 'polytoggle:zoom',
   instrumentsCollapsed: 'polytoggle:instruments-collapsed',
   panelCollapsed: 'polytoggle:panel-collapsed',
-  fullscreen: 'polytoggle:fullscreen', // phones: 'off' once Full screen is turned off in the Menu
   seenSaveNotice: 'polytoggle:seen-save-notice',
   hint: 'polytoggle:hint', // Poly's first-visit note: tap, play, then done
   seenConfirm: (name) => `polytoggle:seen-confirm:${name}`, // a confirmation is shown once, then never again

@@ -176,12 +176,6 @@ export function speedLabel(hz) {
   return `${hz < 10 ? hz.toFixed(2) : hz.toFixed(1)} Hz`;
 }
 
-export function beatRatesText(beats, hz) {
-  const c = activeCounts(beats);
-  if (!c.length) return '';
-  return 'Beats a second: ' + c.map((n) => { const b = n * hz; return b < 10 ? b.toFixed(2) : b.toFixed(1); }).join(' · ');
-}
-
 export function soundsText(preset, tuning) {
   if (!preset) return 'Custom';
   if (!isChord(preset)) return preset.sounds;
