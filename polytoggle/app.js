@@ -1633,7 +1633,7 @@ function hearSelection() {
 function startDrag2(e, input, cell) {
   e.preventDefault(); // no focus, so no keyboard and no text selection
   try { cell.setPointerCapture(e.pointerId); } catch { /* the window's own listeners follow the drag anyway */ }
-  drag2 = { input, cell, spec: DRAG[input.id], x: e.clientX, pointer: e.pointerId, base: Number(input.value), steps: 0, moved: false,
+  drag2 = { input, cell, spec: DRAG[input.id], x: e.clientX, y: e.clientY, pointer: e.pointerId, base: Number(input.value), steps: 0, moved: false,
     p0: DRAG[input.id].log ? logPos(Number(input.value) + 1, 1, ENV_MAX + 1) : 0 };
 }
 
@@ -1658,7 +1658,8 @@ addEventListener('pointerdown', (e) => {
 addEventListener('pointermove', (e) => {
   const d = drag2;
   if (!d || e.pointerId !== d.pointer) return;
-  const dx = e.clientX - d.x;
+  // BPM also follows a vertical drag (up = faster): a cell at the screen edge has no room to drag outward.
+  const dx = e.clientX - d.x + (d.input.id === 'bpm' ? d.y - e.clientY : 0);
   if (!d.moved) {
     if (Math.abs(dx) < DRAG_DEAD_PX) return;
     d.moved = true;

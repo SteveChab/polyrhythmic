@@ -372,7 +372,7 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
   .is-phone .pr-topbar #restart { grid-area: 1 / 3; }
   .is-phone .pr-topbar .pr-toggle { grid-area: 1 / 4; justify-self: end; border: 0; }
   .is-phone .pr-topbar .pr-scenes { grid-area: 2 / 1 / 3 / -1; justify-self: start; }
-  .is-phone .pr-topbar .pr-inline[data-info="bpm"] { grid-area: 2 / 4; justify-self: end; margin-left: 0; }
+  .is-phone .pr-topbar .pr-inline[data-info="bpm"] { grid-area: 2 / 4; justify-self: end; margin-left: 0; margin-right: var(--space-8); }
   .is-phone .pr-topbar .pr-toggle { gap: 6px; padding: 0 0 0 var(--space-6); }
   .is-phone .pr-topbar .pr-toggle__label { font-size: 11px; }
   .is-phone .pt-body { display: none; }

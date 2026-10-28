@@ -324,8 +324,9 @@
 .pr-wheel__disc::after { background: var(--ink); opacity: var(--shade, 0); }
 .pr-wheel__label { position: absolute; transform: translate(-50%, -50%); font: 600 13px/1 var(--font-mono); pointer-events: none; }
 .pr-wheel__tick { position: absolute; inset: 0; pointer-events: none; }
-.pr-wheel__tick::after { content: ""; position: absolute; left: 50%; top: 8%; width: 1px; height: 2%; margin-left: -0.5px; background: var(--ink); }
-.pr-wheel__tick--named::after { top: 6.4%; width: 2px; height: 3.6%; margin-left: -1px; }
+/* Two-tone: an ink line with a paper edge, so it reads on every hue (WCAG 1.4.11). Never under 2 px. */
+.pr-wheel__tick::after { content: ""; position: absolute; left: 50%; top: 8%; width: 2px; height: 2.4%; min-height: 6px; margin-left: -1px; background: var(--ink); box-shadow: 0 0 0 1px var(--paper); }
+.pr-wheel__tick--named::after { top: 6.4%; width: 3px; height: 4%; min-height: 10px; margin-left: -1.5px; }
 
 /* A dot: 44px hit area, 22px fill in its own color, white then black ring. */
 .pr-dot {

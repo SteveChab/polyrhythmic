@@ -104,7 +104,7 @@ test('sound: lightness is volume with white and black both silent, saturation is
   const full = m.soundOf({ hue: 28, sat: 100, light: 50 }, master);
   assert.equal(full.gain, 1);
   assert.deepEqual([full.tone, full.noise], [1, 0]);
-  const noisy = m.soundOf({ hue: 28, sat: 20, light: 50 }, master);
+  const noisy = m.soundOf({ hue: 28, sat: 5, light: 50 }, master);
   near(noisy.noise ** 2 + noisy.tone ** 2, 1); // equal power: the two always add to the same power
   assert.ok(noisy.noise > noisy.tone);
   assert.equal(m.soundOf({ hue: 28, sat: 100, light: 0 }, master).gain, 0);

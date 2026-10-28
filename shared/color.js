@@ -155,7 +155,7 @@ export function noiseMix(saturation) {
  * the middle). 100 is all tone, 0 is all noise. The noise comes in on a curve (NOISE_CURVE), tuned
  * by ear so a note is still clearly a note at 25% saturation.
  */
-export const NOISE_CURVE = 3; // above 1 keeps the tone out in front longer, since noise masks a pitch easily
+export const NOISE_CURVE = 5; // above 1 keeps the tone out in front longer, since noise masks a pitch easily
 export function equalPowerMix(saturation) {
   const s = Math.min(100, Math.max(0, saturation)) / 100;
   if (s === 0) return { tone: 0, noise: 1 };
