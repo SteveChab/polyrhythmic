@@ -4,7 +4,7 @@ Three free browser apps built on one idea: rhythm, pitch and color run on the sa
 
 Play three beats against four slowly and you hear a groove. Speed it up and your ear stops counting and hears a chord. Raise that chord's frequencies 40 octaves and they land in visible light. Designers have used the same ratios for decades in their layout grids. These apps let you hear, see and play with that.
 
-**Status:** version 1, launching October 2026.
+**Status:** version 1, launching October 2026. All three apps work on desktop and phones.
 
 ## The apps
 
@@ -15,10 +15,12 @@ A microtonal polyrhythmic drum and synth sequencer, and the flagship of the suit
 - Each lane loops on its own length (polymeter). A 3-beat lane and a 4-beat lane drift apart, then line up again every 12 beats.
 - One switch, the polytoggle, flips to polyrhythm: every lane stretches to fill the same span of time.
 - Up to 8 lanes of synthesized drums and synths, with no samples.
-- Per-lane tuning: 12, 19, 24 or 31 equal divisions of the octave, or free Hz.
+- Per-lane tuning: 5, 7, 9, 12, 19, 24 or 31 equal divisions of the octave, or free Hz.
 - Five scenes per song, each with its own notes and its own polymeter or polyrhythm setting.
 - Every note is drawn in the color of its pitch.
-- Songs save in the browser with no login, export as a `.polytoggle` file, and render to WAV.
+- Copy a scene to any other scene from the scene menu (or Option-drag a tab on desktop). New notes start with the pitch, noise and volume of the last note you edited in that lane.
+- Works on phones in both orientations: upright shows the lanes as rings, sideways shows the grid. Add to Home Screen is supported.
+- Songs save in the browser with no login, export as a `.polytoggle` file, and render to a looping WAV (at least 30 seconds, with a short fade-out).
 
 ### polycolor
 
