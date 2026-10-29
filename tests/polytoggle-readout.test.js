@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as r from '../polytoggle/readout.js';
-import * as song from '../polytoggle/song.js';
+import * as r from '../toggle/readout.js';
+import * as song from '../toggle/song.js';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
@@ -98,7 +98,7 @@ test('step text only in 19, 24 and 31-EDO', () => {
   assert.equal(r.stepText(-1200 / 19, '19-edo'), 'step 18 of 19');
 });
 
-import { encodeWav, MAX_EXPORT_SECONDS } from '../polytoggle/wav.js';
+import { encodeWav, MAX_EXPORT_SECONDS } from '../toggle/wav.js';
 
 test('WAV: header, sizes and 16-bit samples', () => {
   const buf = encodeWav([Float32Array.from([0, 1, -1, 0.5]), Float32Array.from([0, 0, 0, 0])], 44100);

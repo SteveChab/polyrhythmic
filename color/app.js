@@ -781,7 +781,7 @@ async function exportCard() {
   g.font = '700 34px "IBM Plex Mono", monospace';
   g.fillText('polycolor', pad + 88, 82);
   g.font = '500 20px "IBM Plex Mono", monospace';
-  g.fillText('polyrhythmic.design/polycolor', pad + 88, 112);
+  g.fillText('polyrhythmic.design/color', pad + 88, 112);
 
   const bw = (W - pad * 2 - gap * (per - 1)) / per;
   dots.forEach((dot, i) => {

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as song from '../polytoggle/song.js';
-import * as st from '../polytoggle/store.js';
+import * as song from '../toggle/song.js';
+import * as st from '../toggle/store.js';
 import { createHistory } from '../shared/history.js';
 
 const fakeStorage = (opts = {}) => {

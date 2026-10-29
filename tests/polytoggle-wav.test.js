@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeWav, peakNormalize, wavFileName, wavInfo, exportPlan, fadeOut, LEAD_IN_SECONDS, TAIL_SECONDS, MAX_EXPORT_SECONDS } from '../polytoggle/wav.js';
-import { createSong, addLane, addNote, setBeats, loopBeats, beatsToSeconds } from '../polytoggle/song.js';
-import { createSequencer } from '../polytoggle/sequencer.js';
+import { encodeWav, peakNormalize, wavFileName, wavInfo, exportPlan, fadeOut, LEAD_IN_SECONDS, TAIL_SECONDS, MAX_EXPORT_SECONDS } from '../toggle/wav.js';
+import { createSong, addLane, addNote, setBeats, loopBeats, beatsToSeconds } from '../toggle/song.js';
+import { createSequencer } from '../toggle/sequencer.js';
 
 test('a cycle of 30 s or more is one pass', () => {
   for (const c of [30, 40, 120]) assert.equal(exportPlan(c).loops, 1);

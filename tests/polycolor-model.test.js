@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as m from '../polycolor/model.js';
+import * as m from '../color/model.js';
 import { hueFromFrequency } from '../shared/color.js';
 
 const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);

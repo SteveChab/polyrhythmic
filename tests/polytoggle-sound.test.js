@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as snd from '../polytoggle/sound.js';
-import { INSTRUMENT_IDS } from '../polytoggle/song.js';
+import * as snd from '../toggle/sound.js';
+import { INSTRUMENT_IDS } from '../toggle/song.js';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 const env = (attackMs, decayMs, sustainPct, releaseMs) => ({ attackMs, decayMs, sustainPct, releaseMs });

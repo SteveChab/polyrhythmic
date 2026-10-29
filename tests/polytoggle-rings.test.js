@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ringOrder, ringRadii, sectorPath, angleOf, ringLabel, ringsAria, HOLE, OUTER, GAP } from '../polytoggle/rings.js';
+import { ringOrder, ringRadii, sectorPath, angleOf, ringLabel, ringsAria, HOLE, OUTER, GAP } from '../toggle/rings.js';
 
 const L = (id, beats) => ({ id, name: id, beats });
 

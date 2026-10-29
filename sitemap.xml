@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://polyrhythmic.design/</loc></url>
-  <url><loc>https://polyrhythmic.design/polytoggle/</loc></url>
-  <url><loc>https://polyrhythmic.design/polycolor/</loc></url>
-  <url><loc>https://polyrhythmic.design/polygrid/</loc></url>
+  <url><loc>https://polyrhythmic.design/toggle/</loc></url>
+  <url><loc>https://polyrhythmic.design/color/</loc></url>
+  <url><loc>https://polyrhythmic.design/grid/</loc></url>
   <url><loc>https://polyrhythmic.design/about/</loc></url>
 </urlset>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as m from '../polygrid/model.js';
+import * as m from '../grid/model.js';
 
 test('slider is logarithmic from 0.25 Hz to 64 Hz, ticks at quarters', () => {
   assert.equal(m.sliderToHz(0), 0.25);

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ROW_TICKS, tickTrainCoefficients, rateGain, toneTrim, tickBalance, heardPower, LOUDNESS_REF } from '../polygrid/sound.js';
+import { ROW_TICKS, tickTrainCoefficients, rateGain, toneTrim, tickBalance, heardPower, LOUDNESS_REF } from '../grid/sound.js';
 
 const series = ({ real, imag }, rate, t) => {
   let x = 0;

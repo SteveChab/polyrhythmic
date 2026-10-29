@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as song from '../polytoggle/song.js';
-import * as q from '../polytoggle/sequencer.js';
+import * as song from '../toggle/song.js';
+import * as q from '../toggle/sequencer.js';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 

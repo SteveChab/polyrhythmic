@@ -47,8 +47,8 @@ export function buildFooter() {
   footer.innerHTML = `
     <div class="foot-cols">
       <nav aria-label="The apps and the article"><p class="foot-head">polyrhythmic.design</p><ul>
-        <li>${link(`${root}polytoggle/`, 'polytoggle')}</li><li>${link(`${root}polycolor/`, 'polycolor')}</li>
-        <li>${link(`${root}polygrid/`, 'polygrid')}</li><li>${link(`${root}about/`, 'about')}</li></ul></nav>
+        <li>${link(`${root}toggle/`, 'polytoggle')}</li><li>${link(`${root}color/`, 'polycolor')}</li>
+        <li>${link(`${root}grid/`, 'polygrid')}</li><li>${link(`${root}about/`, 'about')}</li></ul></nav>
       <nav aria-label="Contact and source"><p class="foot-head">Contact</p><ul>
         <li>${bug('')}</li><li>${speaking()}</li><li>${external(REPO, 'GitHub')}</li><li>${license}</li></ul></nav>
       <p class="foot-privacy">No login, no cookies, no ads.</p>
