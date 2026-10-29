@@ -189,30 +189,7 @@ export function noiseBandQ(saturation) {
   return 0.4 + 14 * s ** 2;
 }
 
-// ---------- HSB, RGB, hex ----------
-
-/** HSB (h degrees, s and b 0..100) to RGB channels 0..255 (rounded). */
-export function hsbToRgb(h, s, b) {
-  const S = s / 100, V = b / 100;
-  const C = V * S;
-  const hp = mod(h, 360) / 60;
-  const X = C * (1 - Math.abs((hp % 2) - 1));
-  const [r1, g1, b1] =
-    hp < 1 ? [C, X, 0] : hp < 2 ? [X, C, 0] : hp < 3 ? [0, C, X] :
-    hp < 4 ? [0, X, C] : hp < 5 ? [X, 0, C] : [C, 0, X];
-  const m = V - C;
-  return [r1, g1, b1].map((c) => Math.round((c + m) * 255));
-}
-
-/** RGB channels 0..255 to HSB (h degrees, s and b 0..100). */
-export function rgbToHsb(r, g, b) {
-  const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255;
-  return {
-    h: hueOfRGB([r / 255, g / 255, b / 255]),
-    s: max === 0 ? 0 : ((max - min) / max) * 100,
-    b: max * 100,
-  };
-}
+// ---------- RGB, hex ----------
 
 export function rgbToHex(r, g, b) {
   return '#' + [r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('');

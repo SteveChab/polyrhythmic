@@ -381,6 +381,7 @@ $('scene-menu-btn').addEventListener('click', () => {
   const item = (label, meta, onclick, disabled = false) => h('button', { class: 'pr-menu-item pr-menu-item--stacked', type: 'button', role: 'menuitem', disabled, onclick: () => { closeSceneMenu(); onclick(); } }, h('span', { text: label }), h('span', { class: 'pr-menu-item__meta', text: meta }));
   m.replaceChildren(
     item('Duplicate scene', empty ? 'Scene is empty' : to < 0 ? 'No empty scene to copy into' : `Copy scene ${scene + 1} into scene ${to + 1}`, () => duplicateScene(scene), empty || to < 0),
+    ...song.scenes.map((_, i) => i).filter((i) => i !== scene).map((i) => item(`Copy scene to ${i + 1}`, empty ? 'Scene is empty' : S.sceneIsEmpty(song.scenes[i]) ? `Copy scene ${scene + 1} into it` : `Replaces scene ${i + 1}`, () => copySceneTo(scene, i), empty)),
     item('Clear scene', `Remove everything in scene ${scene + 1}`, () => clearSceneAt(scene)),
   );
   if (!m.hidden) m.querySelector('[role="menuitem"]:not(:disabled)')?.focus();
@@ -608,7 +609,7 @@ function download(blob, name) {
 
 $('export-song').addEventListener('click', () => {
   closeExport();
-  download(new Blob([S.serializeSong(song)], { type: 'application/json' }), store.fileNameFor(song));
+  download(new Blob([S.serializeSong(song)], { type: 'application/octet-stream' }), store.fileNameFor(song));
 });
 
 $('export-wav').addEventListener('click', async () => {
@@ -961,8 +962,11 @@ function drawHeads(force = false) {
 
 // ---- Adding, moving and resizing notes ----
 
+// Issue #20: a new note starts with the pitch, noise and volume of the last note edited in its lane (this session only; nothing is saved).
+const lastEdited = new Map();
+
 async function addNoteAt(laneId, beat) {
-  const next = S.addNote(song, scene, laneId, beat);
+  const next = S.addNote(song, scene, laneId, beat, lastEdited.get(laneId));
   if (!next) { announce('That beat is taken'); return; }
   history.seal();
   // On a phone a tap only adds the note and plays it, so a beat can be tapped out quickly; nothing opens.
@@ -1374,6 +1378,10 @@ function renderPhoneLane(lane, ls) {
 function editNote(patch, key) {
   if (sel.beat === null) return;
   commit(S.setNote(song, scene, sel.lane, sel.beat, patch), { key: key ? `${key}:${sel.lane}:${sel.beat}` : null });
+  const n = settings(sel.lane).notes.find((x) => x.beat === sel.beat);
+  if (n && ('cents' in patch || 'noisePct' in patch || 'volumeDb' in patch)) {
+    lastEdited.set(sel.lane, { cents: n.cents, noisePct: n.noisePct, volumeDb: n.volumeDb });
+  }
 }
 
 $('tuning').addEventListener('change', async (e) => {
@@ -1386,6 +1394,7 @@ $('tuning').addEventListener('change', async (e) => {
     if (!yes) { e.target.value = settings(id).tuning; return; }
   }
   history.seal();
+  lastEdited.delete(id); // a step in one tuning means nothing in another
   commit(S.setTuning(song, id, tuning));
 });
 

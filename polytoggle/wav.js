@@ -52,11 +52,11 @@ export const TAIL_SECONDS = 2;
 export const FADE_OUT_SECONDS = 1;
 /** A scene shorter than SHORT_CYCLE_SECONDS repeats whole cycles until the file's music is at least TARGET_SECONDS. */
 export const SHORT_CYCLE_SECONDS = 30;
-export const TARGET_SECONDS = 60;
+export const TARGET_SECONDS = 30;
 
 /**
  * How a scene's cycle becomes a file: lead-in, whole loops, tail. A cycle of 30 s or more is one pass; a shorter one
- * repeats so the file ends on the loop point and runs at least a minute. Pure.
+ * repeats so the file ends on the loop point and runs at least 30 s. Pure.
  * @returns {{loops: number, bodySeconds: number, totalSeconds: number, cut: boolean}} `cut` is true when the 10-minute cap trimmed a single pass.
  */
 export function exportPlan(cycleSeconds) {

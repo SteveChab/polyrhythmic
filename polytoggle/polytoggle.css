@@ -182,7 +182,8 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
 
 /* One top bar: Play, Restart, BPM, the polytoggle, then the five scene tabs. The rest moves to the rail and Menu. */
 .is-phone .pr-topbar__row { display: contents; }
-.is-phone .pr-topbar :is(.pt-group, .pt-loop, .pt-song, .pt-zoom, .pt-menuwrap, .pr-btngroup__gap, .pt-iconbtn, .pr-scenes > .pr-eyebrow) { display: none; }
+.is-phone .pr-topbar :is(.pt-group, .pt-loop, .pt-song, .pt-zoom, .pt-menuwrap:not(.pt-scenewrap), .pr-btngroup__gap, .pt-iconbtn:not(.pt-scenemenu), .pr-scenes > .pr-eyebrow) { display: none; }
+.is-phone .pt-scenemenu { width: var(--size-target); height: var(--size-target); }
 .is-phone .pr-topbar .pr-btngroup > :not(.pt-status) { display: none; }
 .is-phone .pr-topbar .pr-btngroup { display: contents; }
 .is-phone .pr-inline[data-info="bpm"] {
@@ -373,6 +374,7 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
   .is-phone .pr-topbar .pr-toggle { grid-area: 1 / 4; justify-self: end; border: 0; }
   .is-phone .pr-topbar .pr-scenes { grid-area: 2 / 1 / 3 / -1; justify-self: start; }
   .is-phone .pr-topbar .pr-inline[data-info="bpm"] { grid-area: 2 / 4; justify-self: end; margin-left: 0; margin-right: var(--space-8); }
+  .is-phone .pr-topbar .pt-scenewrap { grid-area: 2 / 4; justify-self: end; margin-right: calc(64px + var(--space-8) * 2); } /* the gap between the tabs and BPM */
   .is-phone .pr-topbar .pr-toggle { gap: 6px; padding: 0 0 0 var(--space-6); }
   .is-phone .pr-topbar .pr-toggle__label { font-size: 11px; }
   .is-phone .pt-body { display: none; }
@@ -413,3 +415,8 @@ body[data-app="polytoggle"] { height: 100vh; height: 100dvh; min-height: 0; over
   font: 500 11px/1 var(--font-mono); display: flex; align-items: flex-start; justify-content: flex-start; padding: var(--space-4);
 }
 .pt-pad__beat.is-on { background: var(--note-bg); color: var(--note-fg); }
+
+/* Phones, landscape, narrow: the top bar runs out of room (issue #26, measured at 667 px). Restart hides first, then the scene menu button;
+   both stay in the Menu's Scene group, and Restart keeps its keyboard shortcut. */
+@media (orientation: landscape) and (max-width: 780px) { .is-phone .pr-topbar #restart { display: none; } }
+@media (orientation: landscape) and (max-width: 710px) { .is-phone .pr-topbar .pt-scenewrap { display: none; } }

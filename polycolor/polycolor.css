@@ -3,7 +3,6 @@
 .pc-group { display: flex; align-items: center; gap: var(--space-8); }
 .pc-master { width: 88px; }
 .pc-select { height: var(--size-control); }
-.pr-topbar .pr-toggle { border: 0; } /* no vertical rules around the switch (site-spec, The shared header) */
 .pr-switch:disabled { opacity: 0.4; cursor: not-allowed; }
 .pr-toggle__label.is-disabled { color: var(--off) !important; }
 

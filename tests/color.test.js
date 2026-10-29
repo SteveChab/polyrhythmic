@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  hueFromFrequency, frequencyFromHue, wavelengthFromFrequency, foldToWindow, hsbToRgb, rgbToHex,
-  rgbToHsb, hexToRgb, labelInk, noteColor, noiseMix, hslToRgb, rgbToHsl, lightnessToDb, dbToLightness, closeness,
+  hueFromFrequency, frequencyFromHue, wavelengthFromFrequency, foldToWindow, rgbToHex,
+  hexToRgb, labelInk, noteColor, noiseMix, hslToRgb, rgbToHsl, lightnessToDb, dbToLightness, closeness,
 } from '../shared/color.js';
 
 const freq = (semisFromA4) => 440 * 2 ** (semisFromA4 / 12);
@@ -80,8 +80,6 @@ test('lightness is volume: 50% is the true color at full volume, black and white
 });
 
 test('HSL: the vivid wheel is unchanged, desaturating goes gray, lightness goes to black and white', () => {
-  assert.deepEqual(hslToRgb(28, 100, 50), hsbToRgb(28, 100, 100));
-  assert.deepEqual(hslToRgb(106, 100, 45), hsbToRgb(106, 100, 90));
   assert.deepEqual(hslToRgb(200, 0, 50), [128, 128, 128]);
   assert.deepEqual(hslToRgb(200, 100, 0), [0, 0, 0]);
   assert.deepEqual(hslToRgb(200, 100, 100), [255, 255, 255]);
@@ -92,15 +90,15 @@ test('HSL: the vivid wheel is unchanged, desaturating goes gray, lightness goes 
 });
 
 test('design tokens: note colors at full S and B', () => {
-  assert.equal(rgbToHex(...hsbToRgb(28, 100, 100)), '#ff7700'); // note-a
-  assert.equal(rgbToHex(...hsbToRgb(106, 100, 100)), '#3cff00'); // note-c
-  assert.equal(rgbToHex(...hsbToRgb(271, 100, 100)), '#8400ff'); // note-e
+  assert.equal(rgbToHex(...hslToRgb(28, 100, 50)), '#ff7700'); // note-a
+  assert.equal(rgbToHex(...hslToRgb(106, 100, 50)), '#3cff00'); // note-c
+  assert.equal(rgbToHex(...hslToRgb(271, 100, 50)), '#8400ff'); // note-e
 });
 
 test("Poly's sprinkles: G, C, E at 90% brightness", () => {
-  assert.equal(rgbToHex(...hsbToRgb(337, 100, 90)), '#e60058');
-  assert.equal(rgbToHex(...hsbToRgb(106, 100, 90)), '#36e600');
-  assert.equal(rgbToHex(...hsbToRgb(271, 100, 90)), '#7700e6');
+  assert.equal(rgbToHex(...hslToRgb(337, 100, 45)), '#e60058');
+  assert.equal(rgbToHex(...hslToRgb(106, 100, 45)), '#36e600');
+  assert.equal(rgbToHex(...hslToRgb(271, 100, 45)), '#7700e6');
 });
 
 test('label ink: black on bright notes, white on D# and E', () => {
@@ -110,11 +108,9 @@ test('label ink: black on bright notes, white on D# and E', () => {
   assert.equal(labelInk(...hexToRgb('#d400ff')), '#000000');
 });
 
-test('hex and HSB round trip', () => {
+test('hex parsing', () => {
   assert.deepEqual(hexToRgb('#f70'), [255, 119, 0]);
   assert.equal(hexToRgb('nope'), null);
-  const { h, s, b } = rgbToHsb(255, 119, 0);
-  assert.ok(Math.abs(h - 28) < 0.01 && s === 100 && b === 100);
 });
 
 test('noteColor: silence is black, noise mix follows saturation', () => {

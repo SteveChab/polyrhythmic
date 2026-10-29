@@ -8,20 +8,20 @@ test('a cycle of 30 s or more is one pass', () => {
   for (const c of [30, 40, 120]) assert.equal(exportPlan(c).loops, 1);
 });
 
-test('a short cycle repeats whole loops to at least a minute', () => {
-  assert.equal(exportPlan(7.5).loops, 8);
-  assert.equal(exportPlan(15).loops, 4);
-  assert.equal(exportPlan(22).loops, 3);
+test('a short cycle repeats whole loops to at least 30 s', () => {
+  assert.equal(exportPlan(7.5).loops, 4);
+  assert.equal(exportPlan(15).loops, 2);
+  assert.equal(exportPlan(22).loops, 2);
   for (const c of [0.5, 3, 7.5, 22, 29.9]) {
     const p = exportPlan(c);
-    assert.ok(p.bodySeconds >= 60 && p.bodySeconds < 60 + c + 1e-9, `${c}s -> ${p.bodySeconds}s`);
+    assert.ok(p.bodySeconds >= 30 && p.bodySeconds < 30 + c + 1e-9, `${c}s -> ${p.bodySeconds}s`);
     assert.ok(Math.abs(p.bodySeconds - p.loops * c) < 1e-9); // ends on the loop point
   }
 });
 
 test('lead-in and tail are added; the 10-minute cap cuts a single pass', () => {
-  const p = exportPlan(20);
-  assert.equal(p.totalSeconds, LEAD_IN_SECONDS + 60 + TAIL_SECONDS);
+  const p = exportPlan(15);
+  assert.equal(p.totalSeconds, LEAD_IN_SECONDS + 30 + TAIL_SECONDS);
   assert.equal(p.cut, false);
   const long = exportPlan(900);
   assert.equal(long.bodySeconds, MAX_EXPORT_SECONDS);

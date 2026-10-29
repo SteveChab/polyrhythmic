@@ -36,7 +36,7 @@
   font: 500 13px/1 var(--font-sans); cursor: pointer;
 }
 .pr-btn[aria-pressed="true"], .pr-btn[aria-expanded="true"] { background: var(--ink); color: var(--paper); }
-.pr-btn--transport { width: var(--size-target); height: var(--size-target); padding: 0; justify-content: center; }
+.pr-btn--transport { flex: none; width: var(--size-target); height: var(--size-target); padding: 0; justify-content: center; }
 .pr-btn--transport .pr-icon { font-size: 26px; }
 .pr-btn--primary { border-width: var(--stroke-rule); background: var(--ink); color: var(--paper); }
 .pr-btn--primary .pr-icon { font-size: 28px; }
@@ -57,7 +57,6 @@
 /* ---------- The polytoggle switch ---------- */
 .pr-toggle {
   display: flex; align-items: center; gap: var(--space-10); padding: 0 var(--space-12);
-  border-left: var(--stroke-hair) solid var(--ink); border-right: var(--stroke-hair) solid var(--ink);
 }
 .pr-toggle__label { font: 600 13px/1 var(--font-sans); color: var(--off); }
 .pr-toggle:has(.pr-switch[aria-checked="false"]) .pr-toggle__label--off,
