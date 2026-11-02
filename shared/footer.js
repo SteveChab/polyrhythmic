@@ -10,6 +10,8 @@ const link = (href, text, attrs = '') => `<a href="${href}"${attrs}>${text}</a>`
 const external = (href, text, attrs = '') => `<a href="${href}" target="_blank" rel="noopener"${attrs}>${text}${OUT}</a>`;
 const bug = (app) => external('', 'Report a bug', ` data-bug-report${app ? ` data-app="${app}"` : ''} hidden`);
 const speaking = () => external('', 'Speaking and press', ' data-speaking-link hidden');
+const shop = () => external('', 'Shop', ' data-shop-link hidden');
+const support = () => external('', 'Support the apps', ' data-support-link hidden');
 const byline = `made by ${link('https://stevechab.com', 'Steve Chab')}`;
 const copyright = `<span>© ${YEAR} Steve Chab</span>`;
 const license = external(`${REPO}/blob/main/LICENSE`, 'Code: AGPL-3.0');
@@ -18,6 +20,8 @@ const license = external(`${REPO}/blob/main/LICENSE`, 'Code: AGPL-3.0');
 export function menuLinksHTML(root, app) {
   return [
     link(root, 'polyrhythmic.design', ' class="foot-mark"'),
+    shop(),
+    support(),
     bug(app),
     speaking(),
     `<span class="foot-base">${byline} · ${license} · © ${YEAR}</span>`,
@@ -36,6 +40,8 @@ export function buildFooter() {
     nav.innerHTML = [
       link(root, 'polyrhythmic.design', ' class="foot-mark"'),
       byline,
+      shop(),
+      support(),
       bug(app),
       speaking(),
       license,
@@ -49,9 +55,11 @@ export function buildFooter() {
       <nav aria-label="The apps and the article"><p class="foot-head">polyrhythmic.design</p><ul>
         <li>${link(`${root}toggle/`, 'polytoggle')}</li><li>${link(`${root}color/`, 'polycolor')}</li>
         <li>${link(`${root}grid/`, 'polygrid')}</li><li>${link(`${root}about/`, 'about')}</li></ul></nav>
+      <nav aria-label="Poly's shop"><p class="foot-head">Shop</p><ul>
+        <li>${shop()}</li><li>${support()}</li></ul></nav>
       <nav aria-label="Contact and source"><p class="foot-head">Contact</p><ul>
         <li>${bug('')}</li><li>${speaking()}</li><li>${external(REPO, 'GitHub')}</li><li>${license}</li></ul></nav>
-      <p class="foot-privacy">No login, no cookies, no ads.</p>
+      <p class="foot-privacy">No login, no cookies, no ads. Umami counts visits anonymously.</p>
     </div>
     <p class="foot-base">${byline} · ${copyright} · Poly and the wordmarks are not licensed for reuse.</p>`;
 }

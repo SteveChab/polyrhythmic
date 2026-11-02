@@ -104,3 +104,10 @@
 .author { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 32px; }
 .author-photo { width: 200px; height: auto; aspect-ratio: 862 / 1270; object-fit: cover; border: var(--stroke-hair) solid var(--ink); }
 .author-text { flex: 1 1 320px; max-width: 34em; display: flex; flex-direction: column; gap: 12px; }
+
+/* Shop callout (hidden until site.js has the shop URL) */
+.shop-lead { margin: 0; max-width: 34em; }
+.shop-links { margin: 0; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.shop-links a { display: inline-block; padding: 10px 0; font: 500 14px/1.4 var(--font-sans); }
+.shop-links a[hidden] { display: none; }
+.shop-links .pr-icon { font-size: 16px; }
