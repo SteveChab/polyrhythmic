@@ -72,6 +72,11 @@ let sceneClipboard = null;
 const ZOOM_MIN = 24;
 const ZOOM_MAX = 88;
 let zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(pref(store.KEYS.zoom, ZOOM_MIN)) || ZOOM_MIN));
+const RZ_MAX = 40; // the rings' zoom: percent past the fitted size
+const RZ_STEP = 5;
+let ringsZoom = Math.max(0, Math.min(RZ_MAX, Math.round(Number(pref(store.KEYS.ringsZoom, 0)) || 0)));
+let view = pref(store.KEYS.view, 'grid') === 'rings' ? 'rings' : 'grid'; // desktop only; a first visit opens the grid
+const deskRings = () => !isPhone() && view === 'rings';
 let hasPlayed = false;
 let eraseMode = false; // phones: with nothing selected, Erase turns this on; taps then remove notes and lanes
 let phoneTab = 'note'; // phones: which tab the settings drawer shows
@@ -417,7 +422,7 @@ function renderTop() {
     b.classList.toggle('is-empty', S.sceneIsEmpty(song.scenes[i]));
     b.setAttribute('aria-label', `Scene ${i + 1}${S.sceneIsEmpty(song.scenes[i]) ? ', empty' : ''}`);
   });
-  $('zoom').value = String(zoom);
+  syncZoomControl();
   $('song-name-text').textContent = song.name;
   $('song-name').setAttribute('aria-label', `Song name: ${song.name}. Click to rename`);
   document.title = `${song.name} · polytoggle · polyrhythmic.design`;
@@ -456,12 +461,27 @@ $('redo').addEventListener('click', redo);
 function setZoom(z) {
   zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(z)));
   setPref(store.KEYS.zoom, zoom);
-  $('zoom').value = String(zoom);
+  syncZoomControl();
   $('lanes').style.setProperty('--zoom', String(zoom / ZOOM_MIN));
 }
-$('zoom').addEventListener('input', (e) => setZoom(Number(e.target.value)));
-$('zoom-in').addEventListener('click', () => setZoom(zoom + 8));
-$('zoom-out').addEventListener('click', () => setZoom(zoom - 8));
+/** The zoom slider drives the grid's width, or in the rings view the figure's size (kept apart, spec: Rings view on desktop). */
+function syncZoomControl() {
+  const z = $('zoom'), r = deskRings();
+  z.min = String(r ? 0 : ZOOM_MIN);
+  z.max = String(r ? RZ_MAX : ZOOM_MAX);
+  z.value = String(r ? ringsZoom : zoom);
+  z.setAttribute('aria-label', r ? 'Zoom: how large the rings draw' : 'Zoom: how wide the beats draw');
+}
+function setRingsZoom(z) {
+  ringsZoom = Math.max(0, Math.min(RZ_MAX, Math.round(z)));
+  setPref(store.KEYS.ringsZoom, ringsZoom);
+  syncZoomControl();
+  fitRings();
+}
+const zoomBy = (dir) => (deskRings() ? setRingsZoom(ringsZoom + dir * RZ_STEP) : setZoom(zoom + dir * 8));
+$('zoom').addEventListener('input', (e) => (deskRings() ? setRingsZoom(Number(e.target.value)) : setZoom(Number(e.target.value))));
+$('zoom-in').addEventListener('click', () => zoomBy(1));
+$('zoom-out').addEventListener('click', () => zoomBy(-1));
 
 // ---------- Files ----------
 
@@ -803,7 +823,18 @@ function renderStage() {
   });
 
   if (focusedInStage) focusCursor();
+  renderRingsDesk();
   drawHeads(true);
+}
+
+/** A lane's Vol and Pan sliders, shared by the grid's lane header and the rings view's lane list. */
+function laneMix(lane, ls) {
+  const vol = h('input', { class: 'pr-range', type: 'range', min: '0', max: '100', step: '1', value: String(dbToPos(ls.volumeDb)), 'aria-label': `${lane.name} volume`, 'data-info': 'vol', 'aria-valuetext': dbText(ls.volumeDb) });
+  const pan = h('input', { class: 'pr-range', type: 'range', min: '-100', max: '100', step: '1', value: String(Math.round(ls.pan * 100)), 'aria-label': `${lane.name} pan`, 'data-info': 'pan' });
+  vol.addEventListener('input', () => { vol.setAttribute('aria-valuetext', dbText(posToDb(Number(vol.value)))); commit(S.setLaneSettings(song, scene, lane.id, { volumeDb: posToDb(Number(vol.value)) }), { key: `vol:${lane.id}`, stage: false }); });
+  pan.addEventListener('input', () => commit(S.setLaneSettings(song, scene, lane.id, { pan: Number(pan.value) / 100 }), { key: `pan:${lane.id}`, stage: false }));
+  for (const r of [vol, pan]) r.addEventListener('change', () => history.seal());
+  return { vol, pan };
 }
 
 function laneHeader(lane, ls, selected, li) {
@@ -820,11 +851,7 @@ function laneHeader(lane, ls, selected, li) {
     b.addEventListener('click', onclick);
     return b;
   };
-  const vol = h('input', { class: 'pr-range', type: 'range', min: '0', max: '100', step: '1', value: String(dbToPos(ls.volumeDb)), 'aria-label': `${lane.name} volume`, 'data-info': 'vol', 'aria-valuetext': dbText(ls.volumeDb) });
-  const pan = h('input', { class: 'pr-range', type: 'range', min: '-100', max: '100', step: '1', value: String(Math.round(ls.pan * 100)), 'aria-label': `${lane.name} pan`, 'data-info': 'pan' });
-  vol.addEventListener('input', () => { vol.setAttribute('aria-valuetext', dbText(posToDb(Number(vol.value)))); commit(S.setLaneSettings(song, scene, lane.id, { volumeDb: posToDb(Number(vol.value)) }), { key: `vol:${lane.id}`, stage: false }); });
-  pan.addEventListener('input', () => commit(S.setLaneSettings(song, scene, lane.id, { pan: Number(pan.value) / 100 }), { key: `pan:${lane.id}`, stage: false }));
-  for (const r of [vol, pan]) r.addEventListener('change', () => history.seal());
+  const { vol, pan } = laneMix(lane, ls);
   // Phones: the whole header is one button (name, "DRUM · 4", MUTED). Its controls live in the Lane tab.
   const phoneHead = h('button', {
     class: 'pt-phonehead pr-phone-only', type: 'button', 'aria-pressed': String(selected),
@@ -948,6 +975,7 @@ function drawHeads(force = false) {
   const t = ctx ? heardTime(ctx) : 0;
   const hs = hasPlayed ? seq.playheads(t) : null;
   if (uprightRings()) rings.draw(hs, { reduced: reducedMotion.matches });
+  else if (deskRings()) ringsDesk.draw(hs, { reduced: reducedMotion.matches });
   for (const [id, { bar, cols }] of heads) {
     const p = hs?.find((x) => x.laneId === id);
     bar.hidden = !p;
@@ -1749,6 +1777,13 @@ document.addEventListener('keydown', (e) => {
   if (mod || e.altKey || inField || dialog.open || shortcutsDialog.open) return;
   if ((e.key === 'Delete' || e.key === 'Backspace') && sel.lane !== null && sel.beat === null && !t.closest?.('[role="gridcell"], [role="tablist"]')) { e.preventDefault(); deleteSelectedLane(); return; }
   if (/^[1-5]$/.test(e.key)) { setScene(Number(e.key) - 1); return; }
+  if ((e.key === 'v' || e.key === 'V') && !isPhone()) { setView(view === 'grid' ? 'rings' : 'grid', { say: true }); return; }
+  if (deskRings()) { // the grid takes these on its cells; in the rings view they work from anywhere
+    if (e.key === '-') { e.preventDefault(); setRingsZoom(ringsZoom - RZ_STEP); return; }
+    if (e.key === '=' || e.key === '+') { e.preventDefault(); setRingsZoom(ringsZoom + RZ_STEP); return; }
+    if (e.key === '0') { e.preventDefault(); setRingsZoom(0); return; }
+    if (e.key === 'Escape' && sel.lane !== null && t.closest?.('#stage-rings')) { clearSelection(); return; }
+  }
   if ((e.key === 's' || e.key === 'S') && sel.lane !== null) {
     toggleLane(sel.lane, 'solo');
   } else if ((e.key === 'm' || e.key === 'M') && sel.lane !== null) {
@@ -1780,16 +1815,22 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const uprightRings = () => isPhone() && portraitMq.matches;
 const instColor = (id) => { const i = S.INSTRUMENTS.find((x) => x.id === id); return i ? noteColor(S.centsToHz(i.cents), { saturation: 100 - i.noisePct }).hex : '#999'; };
 
-function renderRings() {
-  if (!uprightRings()) return;
+/** The lanes as the figures draw them, in song order. */
+function ringLanes() {
   const scn = sc();
-  const lanes = song.lanes.map((l) => {
+  return song.lanes.map((l) => {
     const ls = scn.lanes[l.id];
     return {
       id: l.id, name: l.name, beats: ls.beats, muted: ls.mute, solo: ls.solo, color: instColor(l.instrument),
-      notes: ls.notes.map((n) => { const c = noteColor(S.centsToHz(n.cents), { saturation: 100 - n.noisePct, db: n.volumeDb }); return { beat: n.beat, length: n.length, hex: c.hex, fg: c.label }; }),
+      notes: ls.notes.map((n) => { const c = noteColor(S.centsToHz(n.cents), { saturation: 100 - n.noisePct, db: n.volumeDb }); return { beat: n.beat, length: n.length, cents: n.cents, hex: c.hex, fg: c.label }; }),
     };
   });
+}
+
+function renderRings() {
+  if (!uprightRings()) return;
+  const scn = sc();
+  const lanes = ringLanes();
   if (!lanes.some((l) => l.id === ringLane)) ringLane = ringOrder(lanes)[0]?.id ?? null;
   rings.render(lanes, scn.polytoggle === 'polyrhythm', ringLane);
   const cur = lanes.find((l) => l.id === ringLane);
@@ -1820,6 +1861,140 @@ function renderRings() {
   drawHeads(true);
 }
 portraitMq.addEventListener('change', () => { renderRings(); });
+
+// ---------- Rings view on desktop ----------
+
+const ringsDesk = createRings($('rd-fig'), { size: 520 });
+let padLaneId = null;
+let padCursor = 0; // the beat pad's one tab stop
+
+const noteCovering = (laneId, beat) => settings(laneId).notes.find((n) => beat >= n.beat && beat < n.beat + (n.length ?? 1));
+
+/** A click on a ring beat or a pad button: an empty beat gets a note, a note is selected, the selected note is cleared. */
+function ringBeatClick(laneId, beat) {
+  const note = noteCovering(laneId, beat);
+  if (!note) { addNoteAt(laneId, beat); return; }
+  if (sel.lane === laneId && sel.beat === note.beat) { clearSelection(); announce('Selection cleared'); } else selectNote(laneId, note.beat);
+}
+
+function removeAt(laneId, beat) {
+  const note = noteCovering(laneId, beat);
+  if (!note) return;
+  history.seal();
+  commit(S.removeNote(song, scene, laneId, note.beat));
+  announce(`${laneAt(laneIdx(laneId)).name}, beat ${beat + 1}, removed`);
+}
+
+const ringTarget = (e) => { const c = e.target.closest?.('[data-lane]'); return c ? { lane: c.dataset.lane, beat: Number(c.dataset.beat) } : null; };
+$('rd-fig').addEventListener('click', (e) => { const c = ringTarget(e); if (c && e.detail <= 1) ringBeatClick(c.lane, c.beat); }); // a double-click removes, below
+$('rd-fig').addEventListener('dblclick', (e) => { const c = ringTarget(e); if (c) removeAt(c.lane, c.beat); });
+
+/** The largest square the stage fits, so every ring shows when the view opens; zoom then grows it up to 1.4 times. */
+function fitRings() {
+  if (!deskRings()) return;
+  const st = $('rd-stage');
+  const cs = getComputedStyle(st);
+  const px = (v) => parseFloat(v) || 0;
+  const w = st.offsetWidth - px(cs.paddingLeft) - px(cs.paddingRight);
+  const hgt = st.offsetHeight - px(cs.paddingTop) - px(cs.paddingBottom) - $('rd-eyebrow').offsetHeight - px(cs.rowGap);
+  const fit = Math.max(160, Math.min(680, Math.floor(Math.min(w, hgt))));
+  $('rd-wrap').style.width = `${Math.round(fit * (1 + ringsZoom / 100))}px`;
+}
+if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitRings).observe($('rd-stage'));
+
+function renderRingsDesk() {
+  if (!deskRings()) return;
+  const active = document.activeElement;
+  const focusKey = active?.closest?.('#stage-rings') ? active.dataset.k : null;
+  const poly = sc().polytoggle === 'polyrhythm';
+  const lanes = ringLanes();
+  const ordered = ringOrder(lanes);
+  $('rd-eyebrow').textContent = `Scene ${scene + 1} · ${poly ? 'polyrhythm' : 'polymeter'} · rings`;
+  ringsDesk.render(lanes, poly, sel.lane, sel.beat !== null ? { laneId: sel.lane, beat: sel.beat } : null);
+
+  // Lane list. A slider mid-drag keeps its element, so the list waits.
+  if (!active?.matches?.('#rd-lanes input[type="range"]')) {
+    $('rd-lanes').replaceChildren(...ordered.map((l, k) => {
+      const lane = laneAt(laneIdx(l.id));
+      const ls = settings(l.id);
+      const on = l.id === sel.lane;
+      const label = ringLabel(k, ordered.length, l.beats);
+      const dense = (text, info, attrs, onclick, content, key) => h('button', { class: 'pr-dense', type: 'button', 'data-info': info, 'aria-label': text, 'data-k': `${l.id}:${key}`, onclick, ...attrs }, content);
+      const { vol, pan } = laneMix(lane, ls);
+      vol.dataset.k = `${l.id}:vol`;
+      pan.dataset.k = `${l.id}:pan`;
+      return h('li', { class: `pt-rdrow${on ? ' is-sel' : ''}${l.muted ? ' is-muted' : ''}`, 'data-info': 'ring-lane' },
+        h('span', { class: 'pr-swatch', style: `--swatch:${l.color}`, 'aria-hidden': 'true' }),
+        h('button', { class: 'pt-rdrow__name', type: 'button', 'aria-pressed': String(on), 'data-k': `${l.id}:name`, 'aria-label': `${l.name}, ${label}. Select lane`, onclick: () => selectLane(l.id) },
+          h('strong', { text: l.name }), h('span', { text: label })),
+        h('div', { class: 'pt-rdrow__ctl' },
+          h('div', { class: 'pt-rdrow__line' },
+            dense(`Solo ${l.name}`, 'solo', { 'aria-pressed': String(l.solo) }, () => toggleLane(l.id, 'solo'), 'S', 'solo'),
+            dense(`Mute ${l.name}`, 'mute', { 'aria-pressed': String(l.muted) }, () => toggleLane(l.id, 'mute'), 'M', 'mute'),
+            dense(`Duplicate ${l.name}`, 'duplicate', { disabled: song.lanes.length >= S.MAX_LANES }, () => duplicateLane(l.id), icon('library_add'), 'dup'),
+            h('span', { class: 'pt-rdrow__spacer' }),
+            dense(`Fewer beats in ${l.name}`, 'beats-minus', { disabled: l.beats <= S.MIN_BEATS }, () => setBeats(l.id, l.beats - 1), MINUS, 'less'),
+            h('span', { class: 'pt-rdrow__count', 'aria-label': `${l.beats} beats`, text: String(l.beats) }),
+            dense(`More beats in ${l.name}`, 'beats-plus', { disabled: l.beats >= S.MAX_BEATS }, () => setBeats(l.id, l.beats + 1), '+', 'more')),
+          h('div', { class: 'pt-rdrow__mix' }, h('span', { text: 'Vol' }), vol, h('span', { text: 'Pan' }), pan)));
+    }));
+  }
+
+  // Beat pad: the selected lane, or the outer ring's before anything is selected.
+  const cur = ordered.find((l) => l.id === sel.lane) ?? ordered[0] ?? null;
+  $('rd-pad').hidden = !cur;
+  if (cur) {
+    if (cur.id !== padLaneId) { padLaneId = cur.id; padCursor = 0; }
+    padCursor = Math.min(padCursor, cur.beats - 1);
+    $('rd-pad-title').textContent = `Beats · ${cur.name}`;
+    $('rd-pad-chip').style.setProperty('--swatch', cur.color);
+    $('rd-pad').setAttribute('aria-label', `Beats of ${cur.name}`);
+    $('rd-pad').style.setProperty('--cols', String(Math.ceil(cur.beats / Math.ceil(cur.beats / 10)))); // at most 10 across, rows kept even
+    $('rd-pad').replaceChildren(...Array.from({ length: cur.beats }, (_, b) => {
+      const note = cur.notes.find((n) => b >= n.beat && b < n.beat + (n.length ?? 1));
+      const picked = !!note && sel.lane === cur.id && sel.beat === note.beat;
+      return h('button', { class: `pt-pad__beat${note ? ' is-on' : ''}`, type: 'button', tabindex: b === padCursor ? '0' : '-1', style: note ? `--note-bg:${note.hex};--note-fg:${note.fg}` : null,
+        'aria-pressed': String(picked), 'data-k': `pad:${b}`, 'aria-label': `${cur.name}, beat ${b + 1}, ${note ? R.fullName(note.cents) : 'empty'}`, text: String(b + 1),
+        onclick: () => { padCursor = b; ringBeatClick(cur.id, b); } });
+    }));
+  } else $('rd-pad-title').textContent = 'Beats';
+  if (focusKey) document.querySelector(`#stage-rings [data-k="${CSS.escape(focusKey)}"]`)?.focus({ preventScroll: true });
+  fitRings();
+}
+
+// One tab stop for the pad; arrow keys move between beats, like the grid's cursor.
+$('rd-pad').addEventListener('keydown', (e) => {
+  const btns = [...$('rd-pad').children];
+  const i = btns.indexOf(document.activeElement);
+  if (i < 0) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); removeAt(padLaneId, i); return; }
+  const cols = Number($('rd-pad').style.getPropertyValue('--cols')) || btns.length;
+  const to = { ArrowRight: i + 1, ArrowLeft: i - 1, ArrowDown: i + cols, ArrowUp: i - cols, Home: 0, End: btns.length - 1 }[e.key];
+  if (to === undefined) return;
+  e.preventDefault();
+  if (to < 0 || to >= btns.length) return;
+  padCursor = to;
+  btns.forEach((b, k) => { b.tabIndex = k === to ? 0 : -1; });
+  btns[to].focus();
+});
+
+// The Grid | Rings switch (desktop). Phones have none: their orientation decides.
+function applyView() {
+  const rings = deskRings();
+  $('view-grid').checked = view === 'grid';
+  $('view-rings').checked = view === 'rings';
+  $('stage').hidden = rings;
+  $('stage-rings').hidden = !rings;
+  syncZoomControl();
+  if (rings) { renderRingsDesk(); drawHeads(true); } else if (!isPhone()) renderStage();
+}
+function setView(next, { say = false } = {}) {
+  view = next;
+  setPref(store.KEYS.view, view);
+  applyView();
+  if (say) announce(view === 'rings' ? 'Rings view' : 'Grid view');
+}
+for (const id of ['view-grid', 'view-rings']) $(id).addEventListener('change', (e) => { if (e.target.checked) setView(e.target.value); });
 reducedMotion.addEventListener('change', () => drawHeads(true));
 
 // ---------- Erase (phones) ----------
@@ -1905,13 +2080,14 @@ phone = setupPhone({
     text: () => dbText(song.masterDb),
   },
 });
-onPhoneChange(() => { eraseMode = false; renderTop(); renderStage(); renderPanel(); });
+onPhoneChange(() => { eraseMode = false; applyView(); renderTop(); renderStage(); renderPanel(); });
 
 onInstallChange(() => phone?.render());
 
 renderInstruments();
 setSidebar(pref(store.KEYS.instrumentsCollapsed, matchMedia('(max-width: 820px)').matches), false);
 setZoom(zoom);
+applyView();
 seq.restart(0, { song, sceneIndex: 0 });
 renderTop();
 renderStage();

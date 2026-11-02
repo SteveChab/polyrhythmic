@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,add_box,add_to_home_screen,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,delete,download,drag_indicator,edit,expand_less,expand_more,folder_open,fullscreen,fullscreen_exit,graphic_eq,help,ink_eraser,keyboard,layers_clear,library_add,menu,note_add,open_in_new,pause,play_arrow,redo,save,screen_rotation,skip_previous,undo,upload,volume_up&amp;display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;icon_names=add,add_box,add_to_home_screen,arrow_downward,arrow_forward,arrow_upward,bug_report,check,chevron_left,chevron_right,close,content_copy,delete,donut_large,download,drag_indicator,edit,expand_less,expand_more,folder_open,fullscreen,fullscreen_exit,graphic_eq,grid_view,help,ink_eraser,keyboard,layers_clear,library_add,menu,note_add,open_in_new,pause,play_arrow,redo,save,screen_rotation,skip_previous,undo,upload,volume_up&amp;display=block">
 <link rel="preload" href="../shared/fonts/IBMPlexMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../shared/tokens.css">
 <link rel="stylesheet" href="../shared/components.css">
@@ -85,6 +85,11 @@
       <input type="file" id="import-file" accept=".polytoggle,.json,application/json" hidden>
     </div>
     <span class="pr-topbar__spacer"></span>
+    <fieldset class="pt-view" data-info="view">
+      <legend class="pr-sr">Stage view</legend>
+      <label class="pt-view__opt"><input type="radio" name="stage-view" id="view-grid" value="grid"><span class="pr-icon" aria-hidden="true">grid_view</span>Grid</label>
+      <label class="pt-view__opt"><input type="radio" name="stage-view" id="view-rings" value="rings"><span class="pr-icon" aria-hidden="true">donut_large</span>Rings</label>
+    </fieldset>
     <div class="pt-zoom" data-info="zoom">
       <span class="pr-inline" aria-hidden="true">Zoom</span>
       <button class="pr-dense pr-hit" type="button" id="zoom-out" aria-label="Zoom out">−</button>
@@ -131,6 +136,20 @@
       <div class="pt-lanes" id="lanes" role="grid" aria-label="Lanes and beats"></div>
       <div class="pt-hint" id="poly-hint" role="status" hidden><span class="pt-hint__poly" aria-hidden="true"></span><span class="pt-hint__body"><strong class="pt-hint__title" id="poly-hint-title"></strong><span class="pt-hint__text" id="poly-hint-text"></span></span></div>
       <p class="pt-empty-stage" id="empty-stage"><span class="pr-desk-only">Add a lane from the instruments: double-click one, press Enter on it, or tap its + button.</span><span class="pr-phone-only">Tap Add to add a lane.</span></p>
+    </div>
+    <div class="pt-ringsdesk" id="stage-rings" role="group" aria-label="Stage, rings view" hidden>
+      <section class="pt-rd__stage" id="rd-stage">
+        <p class="pr-eyebrow" id="rd-eyebrow"></p>
+        <div class="pt-rd__wrap" id="rd-wrap" data-info="rings"><svg class="pt-rd__fig" id="rd-fig" viewBox="0 0 520 520" role="img" aria-label="No lanes yet"></svg></div>
+      </section>
+      <section class="pt-rd__side">
+        <h2 class="pr-eyebrow pt-rd__head">Lanes</h2>
+        <ul class="pt-rd__lanes" id="rd-lanes" aria-label="Lanes, outside ring first"></ul>
+        <div class="pt-rd__padbox" data-info="beat-pad">
+          <h2 class="pr-eyebrow pt-rd__padtitle"><span class="pr-swatch" id="rd-pad-chip" aria-hidden="true"></span><span id="rd-pad-title"></span></h2>
+          <div class="pt-rd__pad" id="rd-pad" role="group"></div>
+        </div>
+      </section>
     </div>
 <div class="pt-dock" id="dock">
 <section class="pt-panel" id="panel" aria-label="Lane and note settings" hidden>

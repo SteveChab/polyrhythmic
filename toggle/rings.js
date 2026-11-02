@@ -1,6 +1,7 @@
-// rings.js: polytoggle upright on a phone (spec, Phones: Upright, rings). Each lane is a ring, the lane with the
-// most beats outside; beat 1 sits at twelve o'clock and the beats run clockwise. The geometry is pure and tested;
-// createRings() draws it as SVG and moves the markers once per frame.
+// rings.js: the rings view, on phones held upright (spec, Phones: Upright, rings) and on desktop (spec, Rings view on
+// desktop). Each lane is a ring, the first lane outside, in the grid's order; beat 1 sits at twelve o'clock and the beats
+// run clockwise. The geometry is pure and tested; createRings() draws it as SVG at either size and moves the markers
+// once per frame.
 
 export const SIZE = 300;
 export const OUTER = 148;
@@ -8,9 +9,16 @@ export const HOLE = 62; // the center, for the beat numerals
 export const GAP = 4;
 export const MAX_THICKNESS = 26;
 
-/** Lanes outside to inside: most beats first; equal lanes keep song order. */
+/** The drawing's geometry. 300 is the phone's; 520 is the desktop's, with a small gap between beats. Other sizes scale the phone's. */
+export function geometryFor(size = SIZE) {
+  if (size === 520) return { size, outer: 254, hole: 88, max: 30, beatGap: 1.5, desktop: true };
+  const k = size / SIZE;
+  return { size, outer: OUTER * k, hole: HOLE * k, max: MAX_THICKNESS * k, beatGap: 0, desktop: false };
+}
+
+/** Lanes outside to inside: the grid's order, never sorted. */
 export function ringOrder(lanes) {
-  return lanes.map((lane, i) => ({ lane, i })).sort((a, b) => b.lane.beats - a.lane.beats || a.i - b.i).map((x) => x.lane);
+  return [...lanes];
 }
 
 /** Outer and inner radius of each of `count` rings, outermost first, 4 px between rings. */
@@ -23,16 +31,16 @@ export function ringRadii(count, { outer = OUTER, hole = HOLE, gap = GAP, max = 
   });
 }
 
-const pt = (r, deg) => {
+const pt = (r, deg, size) => {
   const a = ((deg - 90) * Math.PI) / 180;
-  return [+(SIZE / 2 + r * Math.cos(a)).toFixed(2), +(SIZE / 2 + r * Math.sin(a)).toFixed(2)];
+  return [+(size / 2 + r * Math.cos(a)).toFixed(2), +(size / 2 + r * Math.sin(a)).toFixed(2)];
 };
 
-/** The SVG path of an annular sector between radii r0 < r1 and angles a0 < a1 (degrees clockwise from the top). */
-export function sectorPath(r0, r1, a0, a1) {
+/** The SVG path of an annular sector between radii r0 < r1 and angles a0 < a1 (degrees clockwise from the top) in a square drawing of `size`. */
+export function sectorPath(r0, r1, a0, a1, size = SIZE) {
   const large = a1 - a0 > 180 ? 1 : 0;
   if (a1 - a0 >= 360) a1 = a0 + 359.99;
-  const [x1, y1] = pt(r1, a0), [x2, y2] = pt(r1, a1), [x3, y3] = pt(r0, a1), [x4, y4] = pt(r0, a0);
+  const [x1, y1] = pt(r1, a0, size), [x2, y2] = pt(r1, a1, size), [x3, y3] = pt(r0, a1, size), [x4, y4] = pt(r0, a0, size);
   return `M${x1} ${y1}A${r1} ${r1} 0 ${large} 1 ${x2} ${y2}L${x3} ${y3}A${r0} ${r0} 0 ${large} 0 ${x4} ${y4}Z`;
 }
 
@@ -61,9 +69,12 @@ const el = (tag, attrs = {}) => {
 
 /**
  * lanes given to render(): [{ id, name, beats, muted, notes: [{ beat, length, hex }] }] in song order.
- * Returns { render(lanes, poly), draw(heads, { reduced }) }.
+ * render(lanes, poly, selectedLaneId, selectedNote): selectedNote is { laneId, beat } and gets the halo (desktop).
+ * Returns { render, draw }.
  */
-export function createRings(svg) {
+export function createRings(svg, { size = SIZE } = {}) {
+  const geo = geometryFor(size);
+  const C = size / 2;
   let rings = []; // { id, n, cells: [path], marker }
   let hand = null;
   let lastStep = new Map();
@@ -72,36 +83,43 @@ export function createRings(svg) {
   let center = null;
   let poly = false;
 
-  function render(lanes, polyrhythm, selectedId = null) {
+  function render(lanes, polyrhythm, selectedId = null, selectedNote = null) {
     poly = polyrhythm;
     ordered = ringOrder(lanes);
-    longest = ordered[0] ?? null;
+    longest = ordered.reduce((best, l) => (!best || l.beats > best.beats ? l : best), null); // the center counts the longest lane
     svg.replaceChildren();
     rings = [];
     lastStep = new Map();
-    const radii = ringRadii(ordered.length);
+    const radii = ringRadii(ordered.length, { outer: geo.outer, hole: geo.hole, max: geo.max });
+    const halos = [];
     ordered.forEach((lane, k) => {
       const { outer, inner } = radii[k];
       const g = el('g', { class: lane.muted ? 'is-muted' : '' });
       if (lane.id === selectedId) g.classList.add('is-selected');
       const cells = [];
       const step = 360 / lane.beats;
+      const pad = geo.beatGap ? ((geo.beatGap / inner) * 180) / Math.PI : 0; // degrees trimmed from each side of a beat
+      const note = selectedNote?.laneId === lane.id ? lane.notes.find((n) => n.beat === selectedNote.beat) : null;
       for (let b = 0; b < lane.beats; b++) {
-        const note = lane.notes.find((n) => b >= n.beat && b < n.beat + (n.length ?? 1));
-        const path = el('path', { d: sectorPath(inner, outer, b * step, (b + 1) * step), class: 'pt-ring__cell', 'data-lane': lane.id, 'data-beat': b, fill: note ? (lane.muted ? '#d9d9d9' : note.hex) : '#fff' });
+        const hit = lane.notes.find((n) => b >= n.beat && b < n.beat + (n.length ?? 1));
+        const d = sectorPath(inner, outer, b * step + pad, (b + 1) * step - pad, size);
+        const path = el('path', { d, class: 'pt-ring__cell', 'data-info': hit ? 'ring-note' : 'ring-empty', 'data-lane': lane.id, 'data-beat': b, fill: hit ? (lane.muted ? (geo.desktop ? '#d8d8d8' : '#d9d9d9') : hit.hex) : '#fff' });
         cells.push(path);
         g.append(path);
+        if (note && b >= note.beat && b < note.beat + (note.length ?? 1)) halos.push(d);
       }
-      const marker = el('line', { class: 'pt-ring__marker', x1: SIZE / 2, y1: SIZE / 2 - outer - 1, x2: SIZE / 2, y2: SIZE / 2 - inner + 1 });
+      const marker = el('line', { class: 'pt-ring__marker', x1: C, y1: C - outer - 1, x2: C, y2: C - inner + 1 });
       marker.setAttribute('visibility', 'hidden');
       g.append(marker);
       svg.append(g);
       rings.push({ id: lane.id, n: lane.beats, cells, marker, inner, outer });
     });
-    hand = el('line', { class: 'pt-ring__hand', x1: SIZE / 2, y1: SIZE / 2 - (radii[0]?.outer ?? OUTER) - 2, x2: SIZE / 2, y2: SIZE / 2 - HOLE + 2 });
+    // The selected note: a 7 px white halo under a 3 px ink outline, over every beat it covers.
+    for (const cls of ['pt-ring__halo-white', 'pt-ring__halo-ink']) for (const d of halos) svg.append(el('path', { d, class: cls }));
+    hand = el('line', { class: 'pt-ring__hand', x1: C, y1: C - (radii[0]?.outer ?? geo.outer) - 2, x2: C, y2: C - geo.hole + 2 });
     hand.setAttribute('visibility', 'hidden');
-    center = el('text', { class: 'pt-ring__center', x: SIZE / 2, y: SIZE / 2 + 4, 'text-anchor': 'middle' });
-    const of = el('text', { class: 'pt-ring__of', x: SIZE / 2, y: SIZE / 2 + 28, 'text-anchor': 'middle' });
+    center = el('text', { class: 'pt-ring__center', x: C, y: C + (geo.desktop ? 10 : 4), 'text-anchor': 'middle' });
+    const of = el('text', { class: 'pt-ring__of', x: C, y: C + (geo.desktop ? 36 : 28), 'text-anchor': 'middle' });
     svg.append(hand, center, of);
     svg._of = of;
     svg.setAttribute('aria-label', ringsAria(ordered));
@@ -114,7 +132,7 @@ export function createRings(svg) {
     const reading = longest ? { beat: head ? head.step + 1 : 1, of: longest.beats } : null;
     if (center) {
       center.textContent = reading ? String(reading.beat) : '';
-      svg._of.textContent = reading ? `of ${reading.of}` : '';
+      svg._of.textContent = reading ? (geo.desktop ? `OF ${reading.of}` : `of ${reading.of}`) : '';
     }
     const live = !!heads;
     if (hand) hand.setAttribute('visibility', live && poly && ordered.length ? 'visible' : 'hidden');
@@ -123,7 +141,7 @@ export function createRings(svg) {
       r.marker.setAttribute('visibility', live && !poly && h ? 'visible' : 'hidden');
       if (!h) continue;
       const pos = reduced ? h.step : h.position;
-      if (!poly) r.marker.setAttribute('transform', `rotate(${angleOf(pos, r.n)} ${SIZE / 2} ${SIZE / 2})`);
+      if (!poly) r.marker.setAttribute('transform', `rotate(${angleOf(pos, r.n)} ${C} ${C})`);
       if (lastStep.get(r.id) !== h.step) {
         const prev = lastStep.get(r.id);
         if (prev !== undefined) r.cells[prev]?.classList.remove('is-now');
@@ -131,7 +149,7 @@ export function createRings(svg) {
         lastStep.set(r.id, h.step);
       }
     }
-    if (hand && live && poly && head) hand.setAttribute('transform', `rotate(${angleOf(reduced ? head.step : head.position, longest.beats)} ${SIZE / 2} ${SIZE / 2})`);
+    if (hand && live && poly && head) hand.setAttribute('transform', `rotate(${angleOf(reduced ? head.step : head.position, longest.beats)} ${C} ${C})`);
   }
 
   return { render, draw };

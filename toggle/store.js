@@ -9,6 +9,8 @@ export const KEYS = Object.freeze({
   recent: 'polytoggle:recent',
   working: 'polytoggle:working',
   zoom: 'polytoggle:zoom',
+  ringsZoom: 'polytoggle:rings-zoom', // the rings view's own zoom, apart from the grid's
+  view: 'polytoggle:view', // 'grid' or 'rings' on desktop; not part of the song
   instrumentsCollapsed: 'polytoggle:instruments-collapsed',
   panelCollapsed: 'polytoggle:panel-collapsed',
   seenSaveNotice: 'polytoggle:seen-save-notice',

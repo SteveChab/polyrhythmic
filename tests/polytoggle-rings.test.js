@@ -1,11 +1,28 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ringOrder, ringRadii, sectorPath, angleOf, ringLabel, ringsAria, HOLE, OUTER, GAP } from '../toggle/rings.js';
+import { ringOrder, ringRadii, sectorPath, angleOf, ringLabel, ringsAria, geometryFor, HOLE, OUTER, GAP } from '../toggle/rings.js';
 
 const L = (id, beats) => ({ id, name: id, beats });
 
-test('the lane with the most beats is outermost; ties keep song order', () => {
-  assert.deepEqual(ringOrder([L('a', 4), L('b', 8), L('c', 4), L('d', 6)]).map((l) => l.id), ['b', 'd', 'a', 'c']);
+test('rings follow song order, the first lane outside; they are never sorted', () => {
+  const lanes = [L('a', 4), L('b', 8), L('c', 4), L('d', 6)];
+  assert.deepEqual(ringOrder(lanes).map((l) => l.id), ['a', 'b', 'c', 'd']);
+  assert.notEqual(ringOrder(lanes), lanes, 'a copy, so callers cannot reorder the song');
+});
+
+test('geometry: the phone drawing is 300, the desktop one 520 with a gap between beats', () => {
+  assert.deepEqual(geometryFor(300), { size: 300, outer: 148, hole: 62, max: 26, beatGap: 0, desktop: false });
+  assert.deepEqual(geometryFor(520), { size: 520, outer: 254, hole: 88, max: 30, beatGap: 1.5, desktop: true });
+  const g = geometryFor(600); // other sizes scale the phone's
+  assert.equal(g.outer, 296);
+  assert.equal(g.hole, 124);
+});
+
+test('desktop rings: 8 lanes still fit between the hole and the outer edge, at most 30 thick', () => {
+  const g = geometryFor(520);
+  const r = ringRadii(8, { outer: g.outer, hole: g.hole, max: g.max });
+  assert.ok(r[0].outer <= 254 && r.at(-1).inner >= 88 - 1e-9);
+  r.forEach((x) => assert.ok(x.outer - x.inner <= 30 + 1e-9));
 });
 
 test('rings: 4 px apart, inside the hole, never thicker than 26 px', () => {
@@ -21,6 +38,7 @@ test('rings: 4 px apart, inside the hole, never thicker than 26 px', () => {
 test('sector paths close, and a full ring does not collapse', () => {
   assert.match(sectorPath(100, 120, 0, 90), /^M.*Z$/);
   assert.match(sectorPath(100, 120, 0, 360), /A120 120 0 1 1/);
+  assert.notEqual(sectorPath(100, 120, 0, 90), sectorPath(100, 120, 0, 90, 520), 'the center follows the drawing size');
 });
 
 test('beat 1 is at the top and a lane turns once per loop', () => {
