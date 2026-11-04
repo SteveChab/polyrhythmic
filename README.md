@@ -10,7 +10,7 @@ Play three beats against four slowly and you hear a groove. Speed it up and your
 
 ### polytoggle
 
-A microtonal polyrhythmic drum and synth sequencer, and the flagship of the suite.
+A polyrhythmic and polymeter microtonal drum and synth sequencer in your browser, and the flagship of the suite. Share a song as a link; download a scene as a WAV.
 
 - Each lane loops on its own length (polymeter). A 3-beat lane and a 4-beat lane drift apart, then line up again every 12 beats.
 - One switch, the polytoggle, flips to polyrhythm: every lane stretches to fill the same span of time.
