@@ -18,7 +18,7 @@ export const KIT_PAY_TAGS = { songs: '25328863', palettes: '25328864', wallpaper
 export const SHOP_URL = 'https://shop.polyrhythmic.design/';
 
 /** Where "Support the apps" goes: a Fourthwall custom page with a Donations section. Empty until that page exists; the link stays hidden until then. */
-export const SUPPORT_URL = '';
+export const SUPPORT_URL = 'https://shop.polyrhythmic.design/pages/donate';
 
 /** Show "Report a bug" links once the form URL is set. data-app prefills the App question later. */
 export function wireBugLinks() {

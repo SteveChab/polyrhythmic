@@ -4,7 +4,7 @@ Three free browser apps built on one idea: rhythm, pitch and color run on the sa
 
 Play three beats against four slowly and you hear a groove. Speed it up and your ear stops counting and hears a chord. Raise that chord's frequencies 40 octaves and they land in visible light. Designers have used the same ratios for decades in their layout grids. These apps let you hear, see and play with that.
 
-**Status:** version 1, launching October 2026. All three apps work on desktop and phones.
+**Status:** version 1 is live at [polyrhythmic.design](https://polyrhythmic.design). All three apps work on desktop and phones.
 
 ## The apps
 
@@ -69,7 +69,7 @@ Planned work beyond the first version, including passing palettes and patterns b
 
 ## Contributing
 
-Bug reports are welcome. Once the apps are live, every page will have a "Report a bug" link in its footer.
+Bug reports and ideas are welcome as [GitHub Issues](https://github.com/SteveChab/polyrhythmic/issues).
 
 ## License
 
