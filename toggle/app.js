@@ -19,6 +19,7 @@ import { bindPlayPause, h, icon } from '../shared/ui.js';
 import { isPhone, onPhoneChange } from '../shared/phone.js';
 import { setupPhone } from './phone.js';
 import { createRings, ringOrder, ringLabel } from './rings.js';
+import { encodeShare, decodeShare, isShareHash } from './share.js';
 import { canInstall, install, isIOS, onInstallChange } from '../shared/install.js';
 
 const $ = (id) => document.getElementById(id);
@@ -631,6 +632,50 @@ $('export-song').addEventListener('click', () => {
   closeExport();
   download(new Blob([S.serializeSong(song)], { type: 'application/octet-stream' }), store.fileNameFor(song));
 });
+
+// ---------- Share links: the song in the URL hash (share.js; file-format spec, "Share links") ----------
+
+async function copyShareLink() {
+  let url;
+  try {
+    url = location.href.split('#')[0] + (await encodeShare(song));
+  } catch (err) {
+    await ask({ title: 'Couldn’t make a link', text: err instanceof S.SongError ? err.message : 'This browser couldn’t compress the song. Export a song file instead.', ok: 'OK', cancel: null });
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    announce('Share link copied');
+    $('export-status').textContent = 'Share link copied';
+    setTimeout(() => { $('export-status').textContent = ''; }, 3000);
+  } catch {
+    await ask({ title: 'Copy this link', text: 'This browser wouldn’t copy it for you.', input: url, ok: 'Done', cancel: null });
+  }
+}
+$('export-link').addEventListener('click', () => { closeExport(); copyShareLink(); });
+
+let openingShare = false;
+/** A link opens its song, never silently over unsaved work, and a bad one leaves the song on screen alone. */
+async function openFromHash() {
+  const hash = location.hash;
+  if (!isShareHash(hash) || openingShare) return;
+  openingShare = true;
+  window.history.replaceState(null, '', location.pathname + location.search); // a reload or Back never re-opens it
+  try {
+    const next = await decodeShare(hash);
+    if (store.hasUnsavedChanges(storage, song, songId, isBlank)) {
+      const yes = await ask({ title: `Open “${next.name}”?`, text: 'This link holds a song. Opening it replaces the song on screen, which has changes you haven’t saved.', ok: 'Open shared song', cancel: 'Keep my song' });
+      if (!yes) return;
+    }
+    replaceSong(next, null);
+    announce(`Opened shared song ${song.name}`);
+  } catch (err) {
+    await ask({ title: 'Couldn’t open that link', text: err instanceof S.SongError ? err.message : 'This isn’t a polytoggle song link.', ok: 'OK', cancel: null });
+  } finally {
+    openingShare = false;
+  }
+}
+window.addEventListener('hashchange', openFromHash);
 
 $('export-wav').addEventListener('click', async () => {
   closeExport();
@@ -2059,6 +2104,7 @@ phone = setupPhone({
   save: doSave,
   exportSong: () => $('export-song').click(),
   exportWav: () => $('export-wav').click(),
+  shareLink: copyShareLink,
   duplicateScene: () => duplicateScene(scene),
   clearScene: () => clearSceneAt(scene),
   canDuplicateScene: () => !S.sceneIsEmpty(sc()) && S.nextEmptyScene(song, scene) >= 0,
@@ -2092,3 +2138,5 @@ seq.restart(0, { song, sceneIndex: 0 });
 renderTop();
 renderStage();
 renderPanel();
+
+openFromHash(); // a share link in the address opens its song

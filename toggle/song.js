@@ -177,7 +177,8 @@ export function validateSong(doc) {
   const ids = new Set();
   const lanes = doc.lanes.map((l, i) => {
     if (!isObj(l)) bad(`Lane ${i + 1} isn't a lane.`);
-    if (typeof l.id !== 'string' || l.id.length < 1 || l.id.length > 16) bad(`Lane ${i + 1} needs an id of 1 to 16 characters.`);
+    // Letters, digits, - and _ only: ids are used as object keys, so "__proto__" and friends must never get in.
+    if (typeof l.id !== 'string' || !/^[A-Za-z0-9_-]{1,16}$/.test(l.id) || l.id === '__proto__') bad(`Lane ${i + 1} needs an id of 1 to 16 letters, digits, - or _.`);
     if (ids.has(l.id)) bad(`Two lanes share the id "${l.id}".`);
     ids.add(l.id);
     if (!getInstrument(l.instrument)) bad(`Lane ${i + 1} has an unknown instrument.`);

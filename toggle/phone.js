@@ -83,6 +83,7 @@ export function setupPhone(api) {
     openBtn, openSub,
     menuItem({ icon: 'save', label: 'Save to this browser', onClick: run(api.save) }),
     menuItem({ icon: 'download', label: 'Export song file', hint: '.polytoggle', onClick: run(api.exportSong) }),
+    menuItem({ icon: 'content_copy', label: 'Copy share link', hint: 'whole song', onClick: run(api.shareLink) }),
     wavItem,
     sceneHead,
     dupScene,
