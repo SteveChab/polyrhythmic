@@ -12,7 +12,7 @@ export const SPEAKING_FORM_URL = '';
 export const KIT_FORM_ID = '10133595'; // Kit form "Newsletter site"
 
 /** Kit tag IDs for the optional "What would you pay for?" boxes. A box shows only once its tag ID is set. */
-export const KIT_PAY_TAGS = { songs: '25328863', palettes: '25328864', wallpapers: '25328865', shirts: '25328866', workshops: '25328867', plugin: '25328868' };
+export const KIT_PAY_TAGS = { songs: '25328863', book: '25328864', wallpapers: '25328865', shirts: '25328866', workshops: '25328867', plugin: '25328868' };
 
 /** Poly's shop on Fourthwall (custom domain, Nov 2). Shop links and callouts stay hidden while this is empty. */
 export const SHOP_URL = 'https://shop.polyrhythmic.design/';
@@ -78,7 +78,11 @@ export function wireSignup() {
         const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
         if (!res.ok) throw new Error(String(res.status));
         form.reset();
-        status.textContent = 'Thanks. Check your inbox to confirm.';
+        status.textContent = 'Thanks. Check your inbox to confirm. Your free sample: ';
+        const link = document.createElement('a');
+        link.href = '/downloads/rhythm-harmony-hue-sample.pdf';
+        link.textContent = 'download the 11-page book sample (PDF, 190 KB)';
+        status.append(link, '.');
       } catch {
         status.textContent = '';
         form.submit(); // plain post to Kit, which shows its own confirmation page
